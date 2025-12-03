@@ -1,5 +1,10 @@
-import Link from "next/link";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { UserSearch, ChevronRight } from "lucide-react";
+import DisplayNameDialog from "@/components/DisplayNameDialog";
+import { DISPLAY_NAME_KEY } from "@/lib/constants";
 
 const games = [
   {
@@ -12,8 +17,46 @@ const games = [
 ];
 
 export default function Home() {
+  const router = useRouter();
+  const [hasDisplayName, setHasDisplayName] = useState<boolean | null>(null);
+  const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
+  const [pendingLink, setPendingLink] = useState<string | null>(null);
+
+  // Check if display name exists on mount
+  useEffect(() => {
+    const savedName = localStorage.getItem(DISPLAY_NAME_KEY);
+    setHasDisplayName(!!savedName);
+  }, []);
+
+  const handleGameClick = (link: string) => {
+    const savedName = localStorage.getItem(DISPLAY_NAME_KEY);
+    if (savedName) {
+      // Has display name, redirect directly
+      router.push(link);
+    } else {
+      // No display name, show dialog
+      setPendingLink(link);
+      setIsNameDialogOpen(true);
+    }
+  };
+
+  const handleNameSaved = () => {
+    setHasDisplayName(true);
+    if (pendingLink) {
+      router.push(pendingLink);
+      setPendingLink(null);
+    }
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      setPendingLink(null);
+    }
+    setIsNameDialogOpen(open);
+  };
+
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background">
+    <div className="min-h-dvh flex flex-col bg-background">
       {/* Header */}
       <header className="h-12 flex items-center px-6 border-b">
         <h1 className="text-lg font-bold">Party Games</h1>
@@ -33,10 +76,10 @@ export default function Home() {
           {/* Games Grid */}
           <div className="grid gap-4">
             {games.map((game) => (
-              <Link
+              <button
                 key={game.link}
-                href={game.link}
-                className="group relative overflow-hidden rounded-xl border bg-card px-3 py-2 transition-all hover:shadow-lg hover:scale-[1.02]"
+                onClick={() => handleGameClick(game.link)}
+                className="group relative overflow-hidden rounded-xl border bg-card px-3 py-2 transition-all hover:shadow-lg hover:scale-[1.02] text-left w-full"
               >
                 <div className="flex items-center gap-4">
                   {/* Icon */}
@@ -61,11 +104,19 @@ export default function Home() {
                     <ChevronRight className="w-5 h-5" />
                   </div>
                 </div>
-              </Link>
+              </button>
             ))}
           </div>
         </div>
       </main>
+
+      {/* Display Name Dialog */}
+      <DisplayNameDialog
+        open={isNameDialogOpen}
+        onOpenChange={handleDialogClose}
+        onSave={handleNameSaved}
+        allowClose={true}
+      />
     </div>
   );
 }

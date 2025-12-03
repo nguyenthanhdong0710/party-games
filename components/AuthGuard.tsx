@@ -49,7 +49,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   // Loading state
   if (isCheckingAuth || isAuthenticated === null) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">
           Đang kiểm tra...
         </div>
@@ -60,7 +60,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   // Not authenticated - show password form
   if (!isAuthenticated) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4">
+      <div className="min-h-dvh flex items-center justify-center bg-background px-4">
         <div className="w-full max-w-sm space-y-6 p-6 rounded-xl border bg-card">
           {/* Header */}
           <div className="text-center space-y-2">

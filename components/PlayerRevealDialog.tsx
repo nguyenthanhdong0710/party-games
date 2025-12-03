@@ -97,7 +97,7 @@ export default function PlayerRevealDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContentFullscreen
         className="text-white"
-        showCloseButton={true}
+        showCloseButton
         aria-describedby={undefined}
         onClick={!isRevealed ? handleCardTap : handleGotIt}
       >
