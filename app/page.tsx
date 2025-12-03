@@ -13,6 +13,8 @@ import {
 import useGemini from "@/hooks/useGemini";
 
 export default function Home() {
+  const [playerCount, setPlayerCount] = useState("4");
+  const [imposterCount, setImposterCount] = useState("1");
   const [language, setLanguage] = useState("");
   const [category, setCategory] = useState("");
   const [showHowToPlay, setShowHowToPlay] = useState(false);
@@ -214,6 +216,32 @@ Từ vựng:`;
 
           {/* Form */}
           <div className="space-y-5">
+            {/* Player Count & Imposter Count */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="playerCount">Số người chơi</Label>
+                <Input
+                  id="playerCount"
+                  type="number"
+                  min="3"
+                  placeholder="VD: 4"
+                  value={playerCount}
+                  onChange={(e) => setPlayerCount(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="imposterCount">Số kẻ mạo danh</Label>
+                <Input
+                  id="imposterCount"
+                  type="number"
+                  min="1"
+                  placeholder="VD: 1"
+                  value={imposterCount}
+                  onChange={(e) => setImposterCount(e.target.value)}
+                />
+              </div>
+            </div>
+
             {/* Language Input */}
             <div className="space-y-2">
               <Label htmlFor="language">Ngôn ngữ</Label>
