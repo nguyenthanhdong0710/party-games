@@ -17,24 +17,38 @@ interface PlayerRevealDialogProps {
   gameKey?: number; // Dùng để reset game state
 }
 
-// Hàm tạo vị trí imposter ngẫu nhiên
+// Hàm tạo số ngẫu nhiên sử dụng Crypto API (ngẫu nhiên hơn Math.random)
+function getSecureRandomNumber(max: number): number {
+  if (typeof window !== "undefined" && window.crypto) {
+    const array = new Uint32Array(1);
+    window.crypto.getRandomValues(array);
+    return array[0] % max;
+  }
+  // Fallback cho SSR hoặc môi trường không hỗ trợ
+  return Math.floor(Math.random() * max);
+}
+
+// Fisher-Yates Shuffle với Crypto API - thuật toán shuffle chuẩn nhất
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = getSecureRandomNumber(i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Hàm tạo vị trí imposter ngẫu nhiên sử dụng Fisher-Yates Shuffle
 function generateImposterIndices(
   playerCount: number,
   imposterCount: number
 ): number[] {
-  const indices: number[] = [];
-  const availablePositions = Array.from(
-    { length: playerCount },
-    (_, i) => i + 1
-  );
+  // Tạo mảng các vị trí từ 1 đến playerCount
+  const allPositions = Array.from({ length: playerCount }, (_, i) => i + 1);
 
-  for (let i = 0; i < imposterCount; i++) {
-    const randomIndex = Math.floor(Math.random() * availablePositions.length);
-    indices.push(availablePositions[randomIndex]);
-    availablePositions.splice(randomIndex, 1);
-  }
-
-  return indices;
+  // Shuffle mảng và lấy imposterCount phần tử đầu tiên
+  const shuffled = shuffleArray(allPositions);
+  return shuffled.slice(0, imposterCount);
 }
 
 export default function PlayerRevealDialog({

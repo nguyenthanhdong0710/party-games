@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Minus, Plus } from "lucide-react";
 
 interface GameSettingsFormProps {
   playerCount: string;
@@ -15,8 +16,7 @@ interface GameSettingsFormProps {
   setCategory: (value: string) => void;
   onStart: () => void;
   onHowToPlay: () => void;
-  onRefresh: () => void;
-  isRefreshing?: boolean;
+  isLoading?: boolean;
 }
 
 export default function GameSettingsForm({
@@ -30,8 +30,7 @@ export default function GameSettingsForm({
   setCategory,
   onStart,
   onHowToPlay,
-  onRefresh,
-  isRefreshing,
+  isLoading,
 }: GameSettingsFormProps) {
   return (
     <div className="w-full max-w-sm space-y-8 p-5 rounded-xl border bg-card">
@@ -48,15 +47,19 @@ export default function GameSettingsForm({
         {/* Player Count & Imposter Count */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="playerCount">Số người chơi</Label>
+            <Label htmlFor="playerCount" className="justify-center">
+              Số người chơi
+            </Label>
             <div className="flex items-center space-x-1">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                onClick={() => setPlayerCount(String(Math.max(3, Number(playerCount) - 1)))}
+                onClick={() =>
+                  setPlayerCount(String(Math.max(3, Number(playerCount) - 1)))
+                }
               >
-                -
+                <Minus className="w-4 h-4" />
               </Button>
               <Input
                 id="playerCount"
@@ -79,20 +82,26 @@ export default function GameSettingsForm({
                 size="icon"
                 onClick={() => setPlayerCount(String(Number(playerCount) + 1))}
               >
-                +
+                <Plus className="w-4 h-4" />
               </Button>
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="imposterCount">Số kẻ mạo danh</Label>
+            <Label htmlFor="imposterCount" className="justify-center">
+              Số kẻ mạo danh
+            </Label>
             <div className="flex items-center space-x-1">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                onClick={() => setImposterCount(String(Math.max(1, Number(imposterCount) - 1)))}
+                onClick={() =>
+                  setImposterCount(
+                    String(Math.max(1, Number(imposterCount) - 1))
+                  )
+                }
               >
-                -
+                <Minus className="w-4 h-4" />
               </Button>
               <Input
                 id="imposterCount"
@@ -113,9 +122,11 @@ export default function GameSettingsForm({
                 type="button"
                 variant="outline"
                 size="icon"
-                onClick={() => setImposterCount(String(Number(imposterCount) + 1))}
+                onClick={() =>
+                  setImposterCount(String(Number(imposterCount) + 1))
+                }
               >
-                +
+                <Plus className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -148,18 +159,14 @@ export default function GameSettingsForm({
 
       {/* Buttons */}
       <div className="space-y-3 pt-2">
-        <Button onClick={onStart} className="w-full h-10 text-base"     disabled={isRefreshing}
-        >
-          {isRefreshing ? "Đang làm mới..." : "Bắt đầu"}
-        </Button>
         <Button
-          onClick={onRefresh}
-          variant="outline"
+          onClick={onStart}
           className="w-full h-10 text-base"
-          disabled={isRefreshing}
+          disabled={isLoading}
         >
-          {isRefreshing ? "Đang làm mới..." : "Làm mới"}
+          {isLoading ? "Đang chuẩn bị dữ liệu..." : "Bắt đầu"}
         </Button>
+
         <Button
           onClick={onHowToPlay}
           variant="outline"

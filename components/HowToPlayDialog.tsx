@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Users, MessageCircle, Trophy } from "lucide-react";
 
 interface HowToPlayDialogProps {
   open: boolean;
@@ -29,7 +30,9 @@ export default function HowToPlayDialog({
           {/* Section 1: Role Distribution */}
           <div className="bg-muted/50 rounded-lg p-4 space-y-3">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-red-500 rounded shrink-0" />
+              <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5 text-blue-500" />
+              </div>
               <div>
                 <h3 className="font-bold text-base">Phân chia vai trò</h3>
                 <p className="text-sm text-muted-foreground">
@@ -52,21 +55,23 @@ export default function HowToPlayDialog({
           {/* Section 2: Questions & Answers */}
           <div className="bg-muted/50 rounded-lg p-4 space-y-3">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-red-500 rounded shrink-0" />
+              <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center shrink-0">
+                <MessageCircle className="w-5 h-5 text-green-500" />
+              </div>
               <div>
-                <h3 className="font-bold text-base">Hỏi & Đáp</h3>
+                <h3 className="font-bold text-base">Giao lưu</h3>
                 <p className="text-sm text-muted-foreground">
-                  Lần lượt đặt câu hỏi tinh tế về từ khóa.
+                  Lần lượt đưa ra gợi ý tinh tế về từ khóa.
                 </p>
               </div>
             </div>
             <ul className="space-y-1 text-sm ml-2">
-              <li>• Giữ câu hỏi mơ hồ, không quá rõ ràng.</li>
-              <li>• Ví dụ:</li>
+              <li>• Giữ gợi ý không quá mơ hồ nhưng cũng không quá rõ ràng.</li>
+              <li>• Ví dụ từ khóa là &quot;Gà rán&quot;:</li>
               <ul className="ml-4 space-y-1">
-                <li>• &quot;Nóng hay lạnh?&quot;</li>
-                <li>• &quot;Đông đúc hay yên tĩnh?&quot;</li>
-                <li>• &quot;Dùng ở nhà hay ngoài trời?&quot;</li>
+                <li>• &quot;Màu Vàng&quot;</li>
+                <li>• &quot;Bia&quot;</li>
+                <li>• &quot;Tương ớt&quot;</li>
               </ul>
             </ul>
           </div>
@@ -74,7 +79,9 @@ export default function HowToPlayDialog({
           {/* Section 3: Final Move */}
           <div className="bg-muted/50 rounded-lg p-4 space-y-3">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-red-500 rounded shrink-0" />
+              <div className="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center shrink-0">
+                <Trophy className="w-5 h-5 text-amber-500" />
+              </div>
               <div>
                 <h3 className="font-bold text-base">Kết thúc</h3>
                 <p className="text-sm text-muted-foreground">
