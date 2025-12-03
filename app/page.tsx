@@ -13,7 +13,7 @@ const games = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-[100dvh] flex flex-col bg-background">
       {/* Header */}
       <header className="h-12 flex items-center px-6 border-b">
         <h1 className="text-lg font-bold">Party Games</h1>
