@@ -49,25 +49,75 @@ export default function GameSettingsForm({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="playerCount">Số người chơi</Label>
-            <Input
-              id="playerCount"
-              type="number"
-              min="3"
-              placeholder="VD: 4"
-              value={playerCount}
-              onChange={(e) => setPlayerCount(e.target.value)}
-            />
+            <div className="flex items-center space-x-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setPlayerCount(String(Math.max(3, Number(playerCount) - 1)))}
+              >
+                -
+              </Button>
+              <Input
+                id="playerCount"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="4"
+                value={playerCount}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  if (newValue === "" || /^[0-9]*$/.test(newValue)) {
+                    setPlayerCount(newValue);
+                  }
+                }}
+                className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setPlayerCount(String(Number(playerCount) + 1))}
+              >
+                +
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="imposterCount">Số kẻ mạo danh</Label>
-            <Input
-              id="imposterCount"
-              type="number"
-              min="1"
-              placeholder="VD: 1"
-              value={imposterCount}
-              onChange={(e) => setImposterCount(e.target.value)}
-            />
+            <div className="flex items-center space-x-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setImposterCount(String(Math.max(1, Number(imposterCount) - 1)))}
+              >
+                -
+              </Button>
+              <Input
+                id="imposterCount"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="1"
+                value={imposterCount}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  if (newValue === "" || /^[0-9]*$/.test(newValue)) {
+                    setImposterCount(newValue);
+                  }
+                }}
+                className="text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setImposterCount(String(Number(imposterCount) + 1))}
+              >
+                +
+              </Button>
+            </div>
           </div>
         </div>
 
