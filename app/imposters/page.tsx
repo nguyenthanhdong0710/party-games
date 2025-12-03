@@ -187,11 +187,6 @@ Từ vựng:`;
         gameKey={gameKey}
       />
 
-      {/* Header */}
-      <header className="h-16 flex items-center px-6 border-b">
-        <h1 className="text-xl font-bold">LOGO</h1>
-      </header>
-
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-10">
         <GameSettingsForm
