@@ -176,7 +176,7 @@ Từ vựng:`;
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <>
       <HowToPlayDialog open={showHowToPlay} onOpenChange={setShowHowToPlay} />
       <PlayerRevealDialog
         open={showPlayerReveal}
@@ -188,21 +188,19 @@ Từ vựng:`;
       />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-10">
-        <GameSettingsForm
-          playerCount={playerCount}
-          setPlayerCount={setPlayerCount}
-          imposterCount={imposterCount}
-          setImposterCount={setImposterCount}
-          language={language}
-          setLanguage={setLanguage}
-          category={category}
-          setCategory={setCategory}
-          onStart={handleStart}
-          onHowToPlay={handleHowToPlay}
-          isLoading={isLoading}
-        />
-      </main>
-    </div>
+      <GameSettingsForm
+        playerCount={playerCount}
+        setPlayerCount={setPlayerCount}
+        imposterCount={imposterCount}
+        setImposterCount={setImposterCount}
+        language={language}
+        setLanguage={setLanguage}
+        category={category}
+        setCategory={setCategory}
+        onStart={handleStart}
+        onHowToPlay={handleHowToPlay}
+        isLoading={isLoading}
+      />
+    </>
   );
 }
