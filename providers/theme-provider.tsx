@@ -7,13 +7,13 @@ export function ThemeProvider({
   children,
 }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
-    <ThemeProvider
+    <NextThemesProvider
       attribute="class"
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
     >
       {children}
-    </ThemeProvider>
+    </NextThemesProvider>
   );
 }
