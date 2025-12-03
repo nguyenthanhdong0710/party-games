@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import HowToPlayDialog from "@/components/HowToPlayDialog";
 import GameSettingsForm from "@/components/GameSettingsForm";
+import PlayerRevealDialog from "@/components/PlayerRevealDialog";
 import useGemini from "@/hooks/useGemini";
 
 export default function Home() {
@@ -11,10 +12,13 @@ export default function Home() {
   const [language, setLanguage] = useState("");
   const [category, setCategory] = useState("");
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showPlayerReveal, setShowPlayerReveal] = useState(false);
+  const [gameKey, setGameKey] = useState(0);
 
   // Lưu trữ các từ đã fetch
   const [words, setWords] = useState<string[]>([]);
   const [currentWord, setCurrentWord] = useState<string | null>(null);
+  const [isWaitingForApi, setIsWaitingForApi] = useState(false);
 
   // Lưu trữ lang/cat đã dùng để fetch
   const lastFetchedRef = useRef<{ lang: string; cat: string }>({
@@ -35,10 +39,19 @@ export default function Home() {
 
       if (newWords.length > 0) {
         setWords((prev) => [...prev, ...newWords]);
+        
+        // Nếu đang chờ API để bắt đầu game
+        if (isWaitingForApi && newWords.length > 0) {
+          setCurrentWord(newWords[0]);
+          setWords(newWords.slice(1));
+          setShowPlayerReveal(true);
+          setIsWaitingForApi(false);
+        }
       }
     },
     onError: (error) => {
       console.error("AI Error:", error);
+      setIsWaitingForApi(false);
     },
   });
 
@@ -88,20 +101,22 @@ Từ vựng:`;
       // Lang/cat đã thay đổi -> xóa words cũ và fetch mới
       setWords([]);
       setCurrentWord(null);
+      setIsWaitingForApi(true);
+      setGameKey((prev) => prev + 1);
       fetchWords(lang, cat);
     } else if (words.length > 0) {
       // Không thay đổi và có từ sẵn -> dùng từ đầu tiên
       const [nextWord, ...remainingWords] = words;
       setCurrentWord(nextWord);
       setWords(remainingWords);
+      setGameKey((prev) => prev + 1);
+      setShowPlayerReveal(true);
 
       // Nếu còn ít từ thì fetch thêm
       if (remainingWords.length < 2) {
         fetchWords(lang, cat);
       }
     }
-
-    console.log("Bắt đầu game với từ:", currentWord || words[0]);
   };
 
   const handleHowToPlay = () => {
@@ -111,6 +126,15 @@ Từ vựng:`;
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <HowToPlayDialog open={showHowToPlay} onOpenChange={setShowHowToPlay} />
+      
+      <PlayerRevealDialog
+        open={showPlayerReveal}
+        onOpenChange={setShowPlayerReveal}
+        playerCount={parseInt(playerCount)}
+        imposterCount={parseInt(imposterCount)}
+        word={currentWord || ""}
+        gameKey={gameKey}
+      />
 
       {/* Header */}
       <header className="h-16 flex items-center px-6 border-b">
