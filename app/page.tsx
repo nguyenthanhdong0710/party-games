@@ -123,6 +123,13 @@ Từ vựng:`;
     setShowHowToPlay(true);
   };
 
+  const handleRefresh = () => {
+    const lang = language.trim() || "tiếng Việt";
+    const cat = category.trim() || "bất kỳ";
+    setWords([]);
+    fetchWords(lang, cat);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <HowToPlayDialog open={showHowToPlay} onOpenChange={setShowHowToPlay} />
@@ -154,6 +161,8 @@ Từ vựng:`;
           setCategory={setCategory}
           onStart={handleStart}
           onHowToPlay={handleHowToPlay}
+          onRefresh={handleRefresh}
+          isRefreshing={isLoading}
         />
       </main>
     </div>

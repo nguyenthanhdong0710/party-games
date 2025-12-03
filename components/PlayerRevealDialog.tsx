@@ -18,7 +18,10 @@ interface PlayerRevealDialogProps {
 }
 
 // Hàm tạo vị trí imposter ngẫu nhiên
-function generateImposterIndices(playerCount: number, imposterCount: number): number[] {
+function generateImposterIndices(
+  playerCount: number,
+  imposterCount: number
+): number[] {
   const indices: number[] = [];
   const availablePositions = Array.from(
     { length: playerCount },
@@ -44,7 +47,7 @@ export default function PlayerRevealDialog({
 }: PlayerRevealDialogProps) {
   const [currentPlayer, setCurrentPlayer] = useState(1);
   const [isRevealed, setIsRevealed] = useState(false);
-  
+
   // Tạo imposter indices khi gameKey thay đổi (mỗi lần bắt đầu game mới)
   const imposterIndices = useMemo(
     () => generateImposterIndices(playerCount, imposterCount),
@@ -78,7 +81,7 @@ export default function PlayerRevealDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContentFullscreen 
+      <DialogContentFullscreen
         className="text-white"
         showCloseButton={true}
         aria-describedby={undefined}
@@ -96,12 +99,15 @@ export default function PlayerRevealDialog({
               <div
                 className="relative w-80 h-96 rounded-3xl overflow-hidden cursor-pointer transform transition-transform hover:scale-105 shadow-2xl"
                 style={{
-                  background: "linear-gradient(135deg, #3b82f6 0%, #ef4444 100%)",
+                  background:
+                    "linear-gradient(135deg, #3b82f6 0%, #ef4444 100%)",
                 }}
               >
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <h2 className="text-4xl font-bold mb-8">Người chơi {currentPlayer}</h2>
-                  
+                  <h2 className="text-4xl font-bold mb-8">
+                    Người chơi {currentPlayer}
+                  </h2>
+
                   <div className="w-48 h-48 mb-8 flex items-center justify-center">
                     <div className="text-8xl">🕵️</div>
                   </div>
@@ -120,14 +126,22 @@ export default function PlayerRevealDialog({
               >
                 {isCurrentPlayerImposter ? (
                   <>
-                    <h2 className="text-5xl font-bold mb-8 text-red-400">Kẻ mạo danh</h2>
+                    <h2 className="text-5xl font-bold mb-8 text-red-400">
+                      Kẻ mạo danh
+                    </h2>
                     <div className="text-8xl mb-8">🕵️‍♂️</div>
                   </>
                 ) : (
                   <>
-                    <p className="text-lg mb-4 opacity-90">Tìm ra kẻ mạo danh</p>
-                    <p className="text-lg mb-8 opacity-90">trước khi hết giờ!</p>
-                    <h2 className="text-5xl font-bold px-8 text-center [overflow-wrap:break-word]">{word}</h2>
+                    <p className="text-lg mb-4 opacity-90">
+                      Tìm ra kẻ mạo danh
+                    </p>
+                    <p className="text-lg mb-8 opacity-90">
+                      trước khi hết giờ!
+                    </p>
+                    <h2 className="text-5xl font-bold px-8 text-center">
+                      {word}
+                    </h2>
                     <div className="text-6xl mt-8">👥</div>
                   </>
                 )}

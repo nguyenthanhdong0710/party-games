@@ -15,6 +15,8 @@ interface GameSettingsFormProps {
   setCategory: (value: string) => void;
   onStart: () => void;
   onHowToPlay: () => void;
+  onRefresh: () => void;
+  isRefreshing?: boolean;
 }
 
 export default function GameSettingsForm({
@@ -28,6 +30,8 @@ export default function GameSettingsForm({
   setCategory,
   onStart,
   onHowToPlay,
+  onRefresh,
+  isRefreshing,
 }: GameSettingsFormProps) {
   return (
     <div className="w-full max-w-sm space-y-8 p-5 rounded-xl border bg-card">
@@ -94,8 +98,17 @@ export default function GameSettingsForm({
 
       {/* Buttons */}
       <div className="space-y-3 pt-2">
-        <Button onClick={onStart} className="w-full h-10 text-base">
-          Bắt đầu
+        <Button onClick={onStart} className="w-full h-10 text-base"     disabled={isRefreshing}
+        >
+          {isRefreshing ? "Đang làm mới..." : "Bắt đầu"}
+        </Button>
+        <Button
+          onClick={onRefresh}
+          variant="outline"
+          className="w-full h-10 text-base"
+          disabled={isRefreshing}
+        >
+          {isRefreshing ? "Đang làm mới..." : "Làm mới"}
         </Button>
         <Button
           onClick={onHowToPlay}
