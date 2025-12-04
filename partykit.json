@@ -5,5 +5,8 @@
   "parties": {
     "imposters": "party/imposters.ts"
   },
-  "compatibilityDate": "2024-01-01"
+  "compatibilityDate": "2024-01-01",
+  "vars": {
+    "NEXT_PUBLIC_APP_URL": "https://party-games.dongnt.id.vn"
+  }
 }

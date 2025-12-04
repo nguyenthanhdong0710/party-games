@@ -77,7 +77,6 @@ Từ vựng:`;
         const response = await mutateAsync(
           buildPrompt(lang, cat, excludeWords)
         );
-        console.log("new-words", response);
 
         const newWords = parseWords(response);
 
