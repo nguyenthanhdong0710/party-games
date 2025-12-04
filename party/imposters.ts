@@ -66,13 +66,20 @@ interface ResetGameMessage {
   playerId: string;
 }
 
+interface UpdateDisplayNameMessage {
+  type: "update-display-name";
+  playerId: string;
+  displayName: string;
+}
+
 type ClientMessage =
   | JoinMessage
   | LeaveMessage
   | SettingsUpdateMessage
   | StartGameMessage
   | NewRoundMessage
-  | ResetGameMessage;
+  | ResetGameMessage
+  | UpdateDisplayNameMessage;
 
 import { shuffleArray } from "../lib/random";
 
@@ -197,6 +204,10 @@ export default class ImpostersRoom implements Party.Server {
         case "reset-game":
           this.handleResetGame(data.playerId);
           break;
+
+        case "update-display-name":
+          this.handleUpdateDisplayName(data.playerId, data.displayName);
+          break;
       }
 
       await this.saveState();
@@ -315,6 +326,21 @@ export default class ImpostersRoom implements Party.Server {
     this.state.status = "waiting";
     this.state.currentWord = undefined;
     this.state.cards = undefined;
+  }
+
+  handleUpdateDisplayName(playerId: string, displayName: string) {
+    const player = this.state.players.find((p) => p.playerId === playerId);
+    if (player) {
+      player.displayName = displayName;
+    }
+
+    // Update cards if game is playing
+    if (this.state.cards) {
+      const card = this.state.cards.find((c) => c.playerId === playerId);
+      if (card) {
+        card.displayName = displayName;
+      }
+    }
   }
 
   onClose(_conn: Party.Connection) {

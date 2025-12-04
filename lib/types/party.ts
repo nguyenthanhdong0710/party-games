@@ -9,6 +9,7 @@ export type PartyMessageType =
   | "new-round"
   | "reset-game"
   | "end-game"
+  | "update-display-name"
   | "error";
 
 export interface PartyPlayer {
@@ -77,13 +78,20 @@ export interface ResetGameMessage {
   playerId: string;
 }
 
+export interface UpdateDisplayNameMessage {
+  type: "update-display-name";
+  playerId: string;
+  displayName: string;
+}
+
 export type ClientMessage =
   | JoinMessage
   | LeaveMessage
   | SettingsUpdateMessage
   | StartGameMessage
   | NewRoundMessage
-  | ResetGameMessage;
+  | ResetGameMessage
+  | UpdateDisplayNameMessage;
 
 // Messages from server to client
 export interface SyncMessage {

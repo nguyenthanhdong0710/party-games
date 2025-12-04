@@ -1,38 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Users, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRooms, useCreateRoom } from "@/hooks/useApi";
-import { DISPLAY_NAME_KEY, PLAYER_ID_KEY } from "@/lib/constants";
 import PATH from "@/lib/router-path";
-import { nanoid } from "nanoid";
 import HowToPlayDialog from "@/components/imposters/HowToPlayDialog";
-
-function getOrCreatePlayerId(): string {
-  if (typeof window === "undefined") return "";
-  let playerId = localStorage.getItem(PLAYER_ID_KEY);
-  if (!playerId) {
-    playerId = nanoid();
-    localStorage.setItem(PLAYER_ID_KEY, playerId);
-  }
-  return playerId;
-}
+import { usePlayer } from "@/providers/player-provider";
 
 export default function ImpostersLobby() {
   const router = useRouter();
-  const [playerId, setPlayerId] = useState("");
-  const [displayName, setDisplayName] = useState("");
+  const { playerId, displayName } = usePlayer();
+
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   const { data, isLoading, refetch } = useRooms("imposters");
   const createRoom = useCreateRoom();
-
-  useEffect(() => {
-    setPlayerId(getOrCreatePlayerId());
-    setDisplayName(localStorage.getItem(DISPLAY_NAME_KEY) || "");
-  }, []);
 
   const handleCreateRoom = async () => {
     if (!playerId || !displayName) return;
@@ -85,14 +69,17 @@ export default function ImpostersLobby() {
             onClick={() => refetch()}
             disabled={isLoading}
           >
-            <RefreshCw className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`}
+            />
           </Button>
         </div>
 
         {/* Room List */}
         <div className="space-y-3">
           <h3 className="font-semibold text-sm text-muted-foreground">
-            Phòng đang chờ ({rooms.filter((r) => r.status === "waiting").length})
+            Phòng đang chờ ({rooms.filter((r) => r.status === "waiting").length}
+            )
           </h3>
 
           {isLoading ? (

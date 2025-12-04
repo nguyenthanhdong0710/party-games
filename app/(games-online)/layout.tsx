@@ -1,36 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import DisplayNameDialog from "@/components/DisplayNameDialog";
 import { ArrowLeft, Pencil } from "lucide-react";
-import { DISPLAY_NAME_KEY, DEFAULT_DISPLAY_NAME } from "@/lib/constants";
+import { PlayerProvider, usePlayer } from "@/providers/player-provider";
 
-export default function GameLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+function LayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [displayName, setDisplayName] = useState(DEFAULT_DISPLAY_NAME);
+  const { displayName, setDisplayName } = usePlayer();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-
-  // Load display name from localStorage on mount
-  useEffect(() => {
-    const savedName = localStorage.getItem(DISPLAY_NAME_KEY);
-    if (savedName) {
-      setDisplayName(savedName);
-    }
-  }, []);
-
-  const handleOpenEditDialog = () => {
-    setIsEditDialogOpen(true);
-  };
-
-  const handleSave = (name: string) => {
-    setDisplayName(name);
-  };
 
   return (
     <div className="min-h-dvh flex flex-col bg-background">
@@ -49,7 +29,7 @@ export default function GameLayout({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={handleOpenEditDialog}
+            onClick={() => setIsEditDialogOpen(true)}
           >
             <Pencil className="w-4 h-4" />
           </Button>
@@ -60,7 +40,7 @@ export default function GameLayout({
       <DisplayNameDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
-        onSave={handleSave}
+        onSave={setDisplayName}
         initialValue={displayName}
         allowClose={true}
       />
@@ -70,5 +50,17 @@ export default function GameLayout({
         {children}
       </main>
     </div>
+  );
+}
+
+export default function GameLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <PlayerProvider>
+      <LayoutContent>{children}</LayoutContent>
+    </PlayerProvider>
   );
 }

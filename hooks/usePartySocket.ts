@@ -164,6 +164,17 @@ export function usePartySocket({
     });
   }, [send, playerId]);
 
+  const updateDisplayName = useCallback(
+    (newDisplayName: string) => {
+      send({
+        type: "update-display-name",
+        playerId,
+        displayName: newDisplayName,
+      });
+    },
+    [send, playerId]
+  );
+
   return {
     state,
     isConnected,
@@ -172,5 +183,6 @@ export function usePartySocket({
     newRound,
     leave,
     resetGame,
+    updateDisplayName,
   };
 }

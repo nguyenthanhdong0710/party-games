@@ -2,23 +2,22 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Users, Crown, Settings, Minus, Plus } from "lucide-react";
+import { Users, Crown, Settings, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePartySocket } from "@/hooks/usePartySocket";
 import { useWordGenerator } from "@/hooks/useWordGenerator";
 import PlayerRevealDialog from "@/components/imposters/PlayerRevealDialog";
-import { DISPLAY_NAME_KEY, PLAYER_ID_KEY } from "@/lib/constants";
 import PATH from "@/lib/router-path";
+import { usePlayer } from "@/providers/player-provider";
 
 export default function ImpostersRoom() {
   const params = useParams();
   const router = useRouter();
   const roomId = params.roomId as string;
 
-  const [playerId, setPlayerId] = useState("");
-  const [displayName, setDisplayName] = useState("");
+  const { playerId, displayName } = usePlayer();
   const [showPlayerReveal, setShowPlayerReveal] = useState(false);
 
   // Local settings state (for host)
@@ -27,14 +26,6 @@ export default function ImpostersRoom() {
   const [category, setCategory] = useState("");
 
   const isInitialFetchDone = useRef(false);
-
-  // Initialize player info
-  useEffect(() => {
-    const id = localStorage.getItem(PLAYER_ID_KEY) || "";
-    const name = localStorage.getItem(DISPLAY_NAME_KEY) || "";
-    setPlayerId(id);
-    setDisplayName(name);
-  }, []);
 
   // PartyKit connection
   const {
@@ -45,6 +36,7 @@ export default function ImpostersRoom() {
     newRound,
     leave,
     resetGame,
+    updateDisplayName,
   } = usePartySocket({
     roomId,
     playerId,
@@ -57,6 +49,13 @@ export default function ImpostersRoom() {
   const isHost = state?.hostId === playerId;
   const playerCount = state?.players.length || 0;
   const myCard = state?.cards?.find((c) => c.playerId === playerId);
+
+  // Update PartyKit when displayName changes
+  useEffect(() => {
+    if (isConnected && displayName) {
+      updateDisplayName(displayName);
+    }
+  }, [displayName, isConnected, updateDisplayName]);
 
   // Word generator
   const {
@@ -158,12 +157,9 @@ export default function ImpostersRoom() {
         word={myCard?.word || ""}
       />
 
-      <div className="w-full max-w-md space-y-6 p-5 flex-1 flex flex-col">
+      <div className="w-full max-w-md space-y-6 px-5 flex-1 flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={handleLeave}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
           <div className="flex-1">
             <h2 className="text-xl font-bold">Phòng {roomId}</h2>
             <p className="text-sm text-muted-foreground">
