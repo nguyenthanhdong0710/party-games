@@ -61,12 +61,18 @@ interface NewRoundMessage {
   word: string;
 }
 
+interface ResetGameMessage {
+  type: "reset-game";
+  playerId: string;
+}
+
 type ClientMessage =
   | JoinMessage
   | LeaveMessage
   | SettingsUpdateMessage
   | StartGameMessage
-  | NewRoundMessage;
+  | NewRoundMessage
+  | ResetGameMessage;
 
 import { shuffleArray } from "../lib/random";
 
@@ -117,6 +123,39 @@ export default class ImpostersRoom implements Party.Server {
     await this.room.storage.put("state", this.state);
   }
 
+  async syncToMongoDB() {
+    const apiUrl =
+      (this.room.env.NEXT_PUBLIC_APP_URL as string) || "http://localhost:3090";
+    
+    try {
+      const players = this.state.players.map((p) => ({
+        playerId: p.playerId,
+        displayName: p.displayName,
+        joinedAt: new Date(),
+      }));
+
+      const response = await fetch(
+        `${apiUrl}/api/rooms/${this.state.roomId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            status: this.state.status,
+            players,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        // eslint-disable-next-line no-console
+        console.error("Sync failed:", response.status, await response.text());
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Sync error:", error);
+    }
+  }
+
   broadcast() {
     this.room.broadcast(
       JSON.stringify({
@@ -159,10 +198,19 @@ export default class ImpostersRoom implements Party.Server {
         case "new-round":
           this.handleNewRound(data.playerId, data.word);
           break;
+
+        case "reset-game":
+          this.handleResetGame(data.playerId);
+          break;
       }
 
       await this.saveState();
       this.broadcast();
+      
+      // Sync to MongoDB for lobby display
+      if (["join", "leave", "start-game", "reset-game"].includes(data.type)) {
+        this.syncToMongoDB();
+      }
     } catch {
       sender.send(
         JSON.stringify({
@@ -246,6 +294,14 @@ export default class ImpostersRoom implements Party.Server {
       this.state.settings.imposterCount,
       word
     );
+  }
+
+  handleResetGame(playerId: string) {
+    if (playerId !== this.state.hostId) return;
+
+    this.state.status = "waiting";
+    this.state.currentWord = undefined;
+    this.state.cards = undefined;
   }
 
   onClose(_conn: Party.Connection) {

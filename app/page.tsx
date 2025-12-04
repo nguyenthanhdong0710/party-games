@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { UserSearch, ChevronRight } from "lucide-react";
 import DisplayNameDialog from "@/components/DisplayNameDialog";
 import { DISPLAY_NAME_KEY } from "@/lib/constants";
+import PATH from "@/lib/router-path";
 
 const games = [
   {
     label: "Truy tìm Imposter",
     description: "Tìm ra kẻ mạo danh trong nhóm của bạn",
-    link: "/online/imposters",
+    link: PATH.onlineImposters,
     icon: UserSearch,
     color: "from-blue-500 to-red-500",
     requiresDisplayName: true,
@@ -18,7 +19,7 @@ const games = [
   {
     label: "Truy tìm Imposter (Offline)",
     description: "Chơi offline trên cùng một thiết bị",
-    link: "/offline/imposters",
+    link: PATH.offlineImposters,
     icon: UserSearch,
     color: "from-purple-500 to-pink-500",
     requiresDisplayName: false,

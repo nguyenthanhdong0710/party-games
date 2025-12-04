@@ -10,6 +10,7 @@ import { usePartySocket } from "@/hooks/usePartySocket";
 import { useWordGenerator } from "@/hooks/useWordGenerator";
 import PlayerRevealDialog from "@/components/imposters/PlayerRevealDialog";
 import { DISPLAY_NAME_KEY, PLAYER_ID_KEY } from "@/lib/constants";
+import PATH from "@/lib/router-path";
 
 export default function ImpostersRoom() {
   const params = useParams();
@@ -36,28 +37,39 @@ export default function ImpostersRoom() {
   }, []);
 
   // PartyKit connection
-  const { state, isConnected, updateSettings, startGame, newRound, leave } =
-    usePartySocket({
-      roomId,
-      playerId,
-      displayName,
-      onError: (error) => {
-        console.error("PartyKit error:", error);
-      },
-    });
+  const {
+    state,
+    isConnected,
+    updateSettings,
+    startGame,
+    newRound,
+    leave,
+    resetGame,
+  } = usePartySocket({
+    roomId,
+    playerId,
+    displayName,
+    onError: (error) => {
+      console.error("PartyKit error:", error);
+    },
+  });
 
   const isHost = state?.hostId === playerId;
   const playerCount = state?.players.length || 0;
   const myCard = state?.cards?.find((c) => c.playerId === playerId);
 
   // Word generator
-  const { isLoading: isLoadingWords, isWaitingForApi, getNextWord, prefetch } =
-    useWordGenerator({
-      onWordReady: (word) => {
-        startGame(word);
-        setShowPlayerReveal(true);
-      },
-    });
+  const {
+    isLoading: isLoadingWords,
+    isWaitingForApi,
+    getNextWord,
+    prefetch,
+  } = useWordGenerator({
+    onWordReady: (word) => {
+      startGame(word);
+      setShowPlayerReveal(true);
+    },
+  });
 
   // Initial fetch for host
   useEffect(() => {
@@ -125,7 +137,7 @@ export default function ImpostersRoom() {
 
   const handleLeave = () => {
     leave();
-    router.push("/imposters");
+    router.push(PATH.onlineImposters);
   };
 
   if (!isConnected || !state) {
@@ -146,7 +158,7 @@ export default function ImpostersRoom() {
         word={myCard?.word || ""}
       />
 
-      <div className="w-full max-w-md space-y-6 p-5">
+      <div className="w-full max-w-md space-y-6 p-5 flex-1 flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={handleLeave}>
@@ -165,7 +177,13 @@ export default function ImpostersRoom() {
         </div>
 
         {/* Players List */}
-        <div className="space-y-2">
+        <div
+          className={
+            isHost && state.status === "waiting"
+              ? "space-y-2"
+              : "space-y-2 flex-1"
+          }
+        >
           <h3 className="font-semibold text-sm text-muted-foreground">
             Người chơi
           </h3>
@@ -192,9 +210,16 @@ export default function ImpostersRoom() {
           </div>
         </div>
 
+        {/* Players waiting */}
+        {!isHost && state.status === "waiting" && (
+          <div className="text-center py-4 text-muted-foreground flex-1">
+            Đang chờ chủ phòng bắt đầu...
+          </div>
+        )}
+
         {/* Settings (Host only) */}
         {isHost && state.status === "waiting" && (
-          <div className="space-y-4 p-4 rounded-xl border bg-card">
+          <div className="space-y-4 p-4 rounded-xl border bg-card flex-1">
             <div className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               <h3 className="font-semibold">Cài đặt</h3>
@@ -225,7 +250,7 @@ export default function ImpostersRoom() {
                       parseInt(e.target.value) || 1
                     )
                   }
-                  className="text-center w-16"
+                  className="text-center w-full"
                 />
                 <Button
                   type="button"
@@ -268,7 +293,7 @@ export default function ImpostersRoom() {
         )}
 
         {/* Actions */}
-        <div className="space-y-3">
+        <div className="space-y-3 mb-10">
           {isHost && state.status === "waiting" && (
             <Button
               onClick={handleStart}
@@ -278,8 +303,8 @@ export default function ImpostersRoom() {
               {isLoadingWords || isWaitingForApi
                 ? "Đang chuẩn bị..."
                 : playerCount < 3
-                  ? `Cần ít nhất 3 người (${playerCount}/3)`
-                  : "Bắt đầu"}
+                ? `Cần ít nhất 3 người (${playerCount}/3)`
+                : "Bắt đầu"}
             </Button>
           )}
 
@@ -295,19 +320,22 @@ export default function ImpostersRoom() {
             </Button>
           )}
 
-          {!isHost && state.status === "waiting" && (
-            <div className="text-center py-4 text-muted-foreground">
-              Đang chờ chủ phòng bắt đầu...
-            </div>
-          )}
-
-          {!isHost && state.status === "playing" && (
+          {state.status === "playing" && (
             <Button
               onClick={() => setShowPlayerReveal(true)}
               variant="outline"
               className="w-full h-12"
             >
               Xem lại thẻ của tôi
+            </Button>
+          )}
+          {isHost && state.status === "playing" && (
+            <Button
+              onClick={() => resetGame()}
+              variant="ghost"
+              className="w-full h-12"
+            >
+              Bắt đầu lại
             </Button>
           )}
         </div>

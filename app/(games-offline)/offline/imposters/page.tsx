@@ -6,6 +6,7 @@ import HowToPlayDialog from "@/components/imposters/HowToPlayDialog";
 import GameSettingsFormOffline from "@/components/imposters/GameSettingsFormOffline";
 import PlayerRevealDialogOffline from "@/components/imposters/PlayerRevealDialogOffline";
 import { useWordGenerator } from "@/hooks/useWordGenerator";
+import PATH from "@/lib/router-path";
 
 export default function Home() {
   const router = useRouter();
@@ -55,7 +56,7 @@ export default function Home() {
     if (language.trim()) params.set("lang", language.trim());
     if (category.trim()) params.set("cat", category.trim());
     const queryString = params.toString();
-    router.push(queryString ? `?${queryString}` : "/offline/imposters", {
+    router.push(queryString ? `?${queryString}` : PATH.offlineImposters, {
       scroll: false,
     });
 

@@ -43,6 +43,7 @@ export async function PATCH(
       "currentWord",
       "words",
       "usedWords",
+      "players",
     ];
     const updates: Record<string, unknown> = {};
 
