@@ -126,7 +126,7 @@ export default class ImpostersRoom implements Party.Server {
   async syncToMongoDB() {
     const apiUrl =
       (this.room.env.NEXT_PUBLIC_APP_URL as string) || "http://localhost:3090";
-    
+
     try {
       const players = this.state.players.map((p) => ({
         playerId: p.playerId,
@@ -134,25 +134,22 @@ export default class ImpostersRoom implements Party.Server {
         joinedAt: new Date(),
       }));
 
-      const response = await fetch(
-        `${apiUrl}/api/rooms/${this.state.roomId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            status: this.state.status,
-            players,
-          }),
-        }
-      );
+      const response = await fetch(`${apiUrl}/api/rooms/${this.state.roomId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: this.state.status,
+          players,
+        }),
+      });
 
       if (!response.ok) {
         // eslint-disable-next-line no-console
-        console.error("Sync failed:", response.status, await response.text());
+        // console.error("Sync failed:", response.status, await response.text());
       }
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error("Sync error:", error);
+      // console.error("Sync error:", error);
     }
   }
 
@@ -206,7 +203,7 @@ export default class ImpostersRoom implements Party.Server {
 
       await this.saveState();
       this.broadcast();
-      
+
       // Sync to MongoDB for lobby display
       if (["join", "leave", "start-game", "reset-game"].includes(data.type)) {
         this.syncToMongoDB();
@@ -257,6 +254,24 @@ export default class ImpostersRoom implements Party.Server {
       this.state.cards = this.state.cards.filter(
         (c) => c.playerId !== playerId
       );
+    }
+
+    // Delete room from MongoDB if no players left
+    if (this.state.players.length === 0) {
+      this.deleteRoomFromMongoDB();
+    }
+  }
+
+  async deleteRoomFromMongoDB() {
+    const apiUrl =
+      (this.room.env.NEXT_PUBLIC_APP_URL as string) || "http://localhost:3090";
+
+    try {
+      await fetch(`${apiUrl}/api/rooms/${this.state.roomId}`, {
+        method: "DELETE",
+      });
+    } catch {
+      // Silently fail
     }
   }
 

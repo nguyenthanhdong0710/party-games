@@ -330,11 +330,7 @@ export default function ImpostersRoom() {
             </Button>
           )}
           {isHost && state.status === "playing" && (
-            <Button
-              onClick={() => resetGame()}
-              variant="ghost"
-              className="w-full h-12"
-            >
+            <Button onClick={resetGame} variant="ghost" className="w-full h-12">
               Bắt đầu lại
             </Button>
           )}
