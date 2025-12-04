@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import HowToPlayDialog from "@/components/HowToPlayDialog";
-import GameSettingsForm from "@/components/GameSettingsForm";
-import PlayerRevealDialog from "@/components/PlayerRevealDialog";
+import HowToPlayDialog from "@/components/imposters/HowToPlayDialog";
+import GameSettingsForm from "@/components/imposters/GameSettingsForm";
+import PlayerRevealDialog from "@/components/imposters/PlayerRevealDialog";
 import useGemini from "@/hooks/useGemini";
 
 export default function Home() {
