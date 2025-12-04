@@ -157,6 +157,13 @@ export function usePartySocket({
     });
   }, [send, playerId]);
 
+  const resetGame = useCallback(() => {
+    send({
+      type: "reset-game",
+      playerId,
+    });
+  }, [send, playerId]);
+
   return {
     state,
     isConnected,
@@ -164,5 +171,6 @@ export function usePartySocket({
     startGame,
     newRound,
     leave,
+    resetGame,
   };
 }

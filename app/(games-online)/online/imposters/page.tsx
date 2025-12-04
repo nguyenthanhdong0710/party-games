@@ -6,8 +6,9 @@ import { Plus, Users, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRooms, useCreateRoom } from "@/hooks/useApi";
 import { DISPLAY_NAME_KEY, PLAYER_ID_KEY } from "@/lib/constants";
+import PATH from "@/lib/router-path";
 import { nanoid } from "nanoid";
-import HowToPlayDialog from "@/components/HowToPlayDialog";
+import HowToPlayDialog from "@/components/imposters/HowToPlayDialog";
 
 function getOrCreatePlayerId(): string {
   if (typeof window === "undefined") return "";
@@ -42,14 +43,14 @@ export default function ImpostersLobby() {
         hostId: playerId,
         hostName: displayName,
       });
-      router.push(`/imposters/${result.room.roomId}`);
+      router.push(PATH.onlineImpostersRoom(result.room.roomId));
     } catch (error) {
       console.error("Failed to create room:", error);
     }
   };
 
   const handleJoinRoom = (roomId: string) => {
-    router.push(`/imposters/${roomId}`);
+    router.push(PATH.onlineImpostersRoom(roomId));
   };
 
   const rooms = data?.rooms || [];

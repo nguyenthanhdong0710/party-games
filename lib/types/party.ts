@@ -7,6 +7,7 @@ export type PartyMessageType =
   | "start-game"
   | "deal-cards"
   | "new-round"
+  | "reset-game"
   | "end-game"
   | "error";
 
@@ -71,12 +72,18 @@ export interface NewRoundMessage {
   word: string;
 }
 
+export interface ResetGameMessage {
+  type: "reset-game";
+  playerId: string;
+}
+
 export type ClientMessage =
   | JoinMessage
   | LeaveMessage
   | SettingsUpdateMessage
   | StartGameMessage
-  | NewRoundMessage;
+  | NewRoundMessage
+  | ResetGameMessage;
 
 // Messages from server to client
 export interface SyncMessage {

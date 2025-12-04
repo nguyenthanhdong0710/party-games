@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContentFullscreen,
@@ -24,6 +24,11 @@ export default function PlayerRevealDialog({
   word,
 }: PlayerRevealDialogProps) {
   const [isRevealed, setIsRevealed] = useState(false);
+
+  // Reset khi word thay đổi (vòng mới)
+  useEffect(() => {
+    setIsRevealed(false);
+  }, [word]);
 
   const handleCardTap = () => {
     if (!isRevealed) {

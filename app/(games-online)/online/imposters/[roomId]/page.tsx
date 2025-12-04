@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Users, Crown, Settings } from "lucide-react";
+import { ArrowLeft, Users, Crown, Settings, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePartySocket } from "@/hooks/usePartySocket";
-import useGemini from "@/hooks/useGemini";
-import PlayerRevealDialog from "@/components/PlayerRevealDialog";
+import { useWordGenerator } from "@/hooks/useWordGenerator";
+import PlayerRevealDialog from "@/components/imposters/PlayerRevealDialog";
 import { DISPLAY_NAME_KEY, PLAYER_ID_KEY } from "@/lib/constants";
-import { Minus, Plus } from "lucide-react";
+import PATH from "@/lib/router-path";
 
 export default function ImpostersRoom() {
   const params = useParams();
@@ -26,14 +26,6 @@ export default function ImpostersRoom() {
   const [language, setLanguage] = useState("");
   const [category, setCategory] = useState("");
 
-  // Words management
-  const [words, setWords] = useState<string[]>([]);
-  const [usedWords, setUsedWords] = useState<string[]>([]);
-  const [isWaitingForApi, setIsWaitingForApi] = useState(false);
-  const lastFetchedRef = useRef<{ lang: string; cat: string }>({
-    lang: "",
-    cat: "",
-  });
   const isInitialFetchDone = useRef(false);
 
   // Initialize player info
@@ -45,98 +37,47 @@ export default function ImpostersRoom() {
   }, []);
 
   // PartyKit connection
-  const { state, isConnected, updateSettings, startGame, newRound, leave } =
-    usePartySocket({
-      roomId,
-      playerId,
-      displayName,
-      onError: (error) => {
-        console.error("PartyKit error:", error);
-      },
-    });
+  const {
+    state,
+    isConnected,
+    updateSettings,
+    startGame,
+    newRound,
+    leave,
+    resetGame,
+  } = usePartySocket({
+    roomId,
+    playerId,
+    displayName,
+    onError: (error) => {
+      console.error("PartyKit error:", error);
+    },
+  });
 
   const isHost = state?.hostId === playerId;
   const playerCount = state?.players.length || 0;
   const myCard = state?.cards?.find((c) => c.playerId === playerId);
 
-  // Gemini for fetching words
-  const { executePrompt, isLoading: isLoadingWords } = useGemini({
-    onSuccess: (response) => {
-      const newWords = response
-        .split("\n")
-        .map((w: string) => w.trim())
-        .filter((w: string) => w.length > 0)
-        .slice(0, 10);
-
-      if (newWords.length > 0) {
-        setWords((prev) => [...prev, ...newWords]);
-
-        if (isWaitingForApi && newWords.length > 0) {
-          const word = newWords[0];
-          setWords(newWords.slice(1));
-          setUsedWords((prev) => [...prev, word]);
-          startGame(word);
-          setShowPlayerReveal(true);
-          setIsWaitingForApi(false);
-        }
-      }
-    },
-    onError: (error) => {
-      console.error("AI Error:", error);
-      setIsWaitingForApi(false);
+  // Word generator
+  const {
+    isLoading: isLoadingWords,
+    isWaitingForApi,
+    getNextWord,
+    prefetch,
+  } = useWordGenerator({
+    onWordReady: (word) => {
+      startGame(word);
+      setShowPlayerReveal(true);
     },
   });
-
-  const fetchWords = useCallback(
-    (lang: string, cat: string, excludeWords: string[] = []) => {
-      const excludeList =
-        excludeWords.length > 0
-          ? `\n\nCác từ đã sử dụng (KHÔNG được lặp lại):\n${excludeWords.join(", ")}`
-          : "";
-
-      const randomSeed = Math.floor(Math.random() * 1000);
-      const randomHint = [
-        "Hãy nghĩ đến những thứ ít ai nhớ đến đầu tiên",
-        "Ưu tiên những thứ độc đáo, thú vị",
-        "Tránh những từ quá phổ biến, hãy sáng tạo hơn",
-        "Hãy nghĩ đến những thứ bất ngờ trong chủ đề này",
-        "Chọn những thứ mà người ta thường quên mất",
-      ][randomSeed % 5];
-
-      const prompt = `Bạn là một trợ lý tạo từ vựng cho game Imposter.
-
-Yêu cầu:
-- Ngôn ngữ: ${lang}
-- Chủ đề: ${cat}
-- Random seed: ${randomSeed}
-
-Hãy đưa ra 10 từ vựng NGẪU NHIÊN phù hợp với ngôn ngữ và chủ đề trên.
-
-Quy tắc:
-1. ${randomHint}
-2. KHÔNG chọn những từ quá hiển nhiên
-3. Từ phải phổ biến đủ để người chơi có thể mô tả được
-4. Từ không được quá đơn giản hoặc quá khó
-5. Từ phải cụ thể, rõ ràng
-6. Mỗi từ trên một dòng riêng
-7. Không thêm số thứ tự hay ký tự đặc biệt
-8. 10 từ phải khác nhau và đa dạng${excludeList}
-
-Từ vựng:`;
-
-      lastFetchedRef.current = { lang, cat };
-      executePrompt(prompt);
-    },
-    [executePrompt]
-  );
 
   // Initial fetch for host
   useEffect(() => {
     if (isHost && !isInitialFetchDone.current) {
       isInitialFetchDone.current = true;
-      fetchWords("tiếng Việt", "bất kỳ", []);
+      prefetch("tiếng Việt", "bất kỳ");
     }
-  }, [isHost, fetchWords]);
+  }, [isHost, prefetch]);
 
   // Show card dialog when game starts
   useEffect(() => {
@@ -152,7 +93,7 @@ Từ vựng:`;
       imposterCount: parseInt(imposterCount),
       language,
       category,
-      [key]: typeof value === "string" ? value : value,
+      [key]: value,
     };
 
     if (key === "imposterCount") {
@@ -175,28 +116,10 @@ Từ vựng:`;
     const lang = language.trim() || "tiếng Việt";
     const cat = category.trim() || "bất kỳ";
 
-    const hasChanged =
-      lang !== lastFetchedRef.current.lang ||
-      cat !== lastFetchedRef.current.cat;
-
-    if (hasChanged) {
-      setWords([]);
-      setUsedWords([]);
-      setIsWaitingForApi(true);
-      fetchWords(lang, cat, []);
-    } else if (words.length > 0) {
-      const [nextWord, ...remainingWords] = words;
-      setWords(remainingWords);
-      setUsedWords((prev) => [...prev, nextWord]);
-      startGame(nextWord);
+    const word = getNextWord(lang, cat);
+    if (word) {
+      startGame(word);
       setShowPlayerReveal(true);
-
-      if (remainingWords.length < 5) {
-        fetchWords(lang, cat, [...usedWords, nextWord, ...remainingWords]);
-      }
-    } else {
-      setIsWaitingForApi(true);
-      fetchWords(lang, cat, usedWords);
     }
   };
 
@@ -206,24 +129,15 @@ Từ vựng:`;
     const lang = language.trim() || "tiếng Việt";
     const cat = category.trim() || "bất kỳ";
 
-    if (words.length > 0) {
-      const [nextWord, ...remainingWords] = words;
-      setWords(remainingWords);
-      setUsedWords((prev) => [...prev, nextWord]);
-      newRound(nextWord);
-
-      if (remainingWords.length < 5) {
-        fetchWords(lang, cat, [...usedWords, nextWord, ...remainingWords]);
-      }
-    } else {
-      setIsWaitingForApi(true);
-      fetchWords(lang, cat, usedWords);
+    const word = getNextWord(lang, cat);
+    if (word) {
+      newRound(word);
     }
   };
 
   const handleLeave = () => {
     leave();
-    router.push("/imposters");
+    router.push(PATH.onlineImposters);
   };
 
   if (!isConnected || !state) {
@@ -244,7 +158,7 @@ Từ vựng:`;
         word={myCard?.word || ""}
       />
 
-      <div className="w-full max-w-md space-y-6 p-5">
+      <div className="w-full max-w-md space-y-6 p-5 flex-1 flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={handleLeave}>
@@ -263,7 +177,13 @@ Từ vựng:`;
         </div>
 
         {/* Players List */}
-        <div className="space-y-2">
+        <div
+          className={
+            isHost && state.status === "waiting"
+              ? "space-y-2"
+              : "space-y-2 flex-1"
+          }
+        >
           <h3 className="font-semibold text-sm text-muted-foreground">
             Người chơi
           </h3>
@@ -290,9 +210,16 @@ Từ vựng:`;
           </div>
         </div>
 
+        {/* Players waiting */}
+        {!isHost && state.status === "waiting" && (
+          <div className="text-center py-4 text-muted-foreground flex-1">
+            Đang chờ chủ phòng bắt đầu...
+          </div>
+        )}
+
         {/* Settings (Host only) */}
         {isHost && state.status === "waiting" && (
-          <div className="space-y-4 p-4 rounded-xl border bg-card">
+          <div className="space-y-4 p-4 rounded-xl border bg-card flex-1">
             <div className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               <h3 className="font-semibold">Cài đặt</h3>
@@ -318,9 +245,12 @@ Từ vựng:`;
                   type="text"
                   value={imposterCount}
                   onChange={(e) =>
-                    handleSettingsChange("imposterCount", parseInt(e.target.value) || 1)
+                    handleSettingsChange(
+                      "imposterCount",
+                      parseInt(e.target.value) || 1
+                    )
                   }
-                  className="text-center w-16"
+                  className="text-center w-full"
                 />
                 <Button
                   type="button"
@@ -343,7 +273,9 @@ Từ vựng:`;
               <Input
                 placeholder="Nhập ngôn ngữ..."
                 value={language}
-                onChange={(e) => handleSettingsChange("language", e.target.value)}
+                onChange={(e) =>
+                  handleSettingsChange("language", e.target.value)
+                }
               />
             </div>
 
@@ -352,14 +284,16 @@ Từ vựng:`;
               <Input
                 placeholder="Nhập chủ đề..."
                 value={category}
-                onChange={(e) => handleSettingsChange("category", e.target.value)}
+                onChange={(e) =>
+                  handleSettingsChange("category", e.target.value)
+                }
               />
             </div>
           </div>
         )}
 
         {/* Actions */}
-        <div className="space-y-3">
+        <div className="space-y-3 mb-10">
           {isHost && state.status === "waiting" && (
             <Button
               onClick={handleStart}
@@ -380,23 +314,28 @@ Từ vựng:`;
               className="w-full h-12"
               disabled={isLoadingWords || isWaitingForApi}
             >
-              {isLoadingWords || isWaitingForApi ? "Đang chuẩn bị..." : "Vòng mới"}
+              {isLoadingWords || isWaitingForApi
+                ? "Đang chuẩn bị..."
+                : "Vòng mới"}
             </Button>
           )}
 
-          {!isHost && state.status === "waiting" && (
-            <div className="text-center py-4 text-muted-foreground">
-              Đang chờ chủ phòng bắt đầu...
-            </div>
-          )}
-
-          {!isHost && state.status === "playing" && (
+          {state.status === "playing" && (
             <Button
               onClick={() => setShowPlayerReveal(true)}
               variant="outline"
               className="w-full h-12"
             >
               Xem lại thẻ của tôi
+            </Button>
+          )}
+          {isHost && state.status === "playing" && (
+            <Button
+              onClick={() => resetGame()}
+              variant="ghost"
+              className="w-full h-12"
+            >
+              Bắt đầu lại
             </Button>
           )}
         </div>

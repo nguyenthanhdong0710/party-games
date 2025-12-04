@@ -1,6 +1,7 @@
 declare module "partykit/server" {
   export interface Room {
     id: string;
+    env: Record<string, unknown>;
     storage: {
       get<T>(key: string): Promise<T | undefined>;
       put<T>(key: string, value: T): Promise<void>;
@@ -21,3 +22,9 @@ declare module "partykit/server" {
     onClose?(conn: Connection): void | Promise<void>;
   }
 }
+
+// Global fetch for Cloudflare Workers runtime
+declare function fetch(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response>;

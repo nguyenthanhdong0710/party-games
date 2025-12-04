@@ -1,47 +1,52 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserSearch, ChevronRight } from "lucide-react";
 import DisplayNameDialog from "@/components/DisplayNameDialog";
 import { DISPLAY_NAME_KEY } from "@/lib/constants";
+import PATH from "@/lib/router-path";
 
 const games = [
   {
-    label: "Truy tìm KMD",
+    label: "Truy tìm Imposter",
     description: "Tìm ra kẻ mạo danh trong nhóm của bạn",
-    link: "/imposters",
+    link: PATH.onlineImposters,
     icon: UserSearch,
     color: "from-blue-500 to-red-500",
+    requiresDisplayName: true,
+  },
+  {
+    label: "Truy tìm Imposter (Offline)",
+    description: "Chơi offline trên cùng một thiết bị",
+    link: PATH.offlineImposters,
+    icon: UserSearch,
+    color: "from-purple-500 to-pink-500",
+    requiresDisplayName: false,
   },
 ];
 
 export default function Home() {
   const router = useRouter();
-  const [hasDisplayName, setHasDisplayName] = useState<boolean | null>(null);
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
   const [pendingLink, setPendingLink] = useState<string | null>(null);
 
-  // Check if display name exists on mount
-  useEffect(() => {
-    const savedName = localStorage.getItem(DISPLAY_NAME_KEY);
-    setHasDisplayName(!!savedName);
-  }, []);
+  const handleGameClick = (link: string, requiresDisplayName: boolean) => {
+    if (!requiresDisplayName) {
+      router.push(link);
+      return;
+    }
 
-  const handleGameClick = (link: string) => {
     const savedName = localStorage.getItem(DISPLAY_NAME_KEY);
     if (savedName) {
-      // Has display name, redirect directly
       router.push(link);
     } else {
-      // No display name, show dialog
       setPendingLink(link);
       setIsNameDialogOpen(true);
     }
   };
 
   const handleNameSaved = () => {
-    setHasDisplayName(true);
     if (pendingLink) {
       router.push(pendingLink);
       setPendingLink(null);
@@ -78,7 +83,7 @@ export default function Home() {
             {games.map((game) => (
               <button
                 key={game.link}
-                onClick={() => handleGameClick(game.link)}
+                onClick={() => handleGameClick(game.link, game.requiresDisplayName)}
                 className="group relative overflow-hidden rounded-xl border bg-card px-3 py-2 transition-all hover:shadow-lg hover:scale-[1.02] text-left w-full"
               >
                 <div className="flex items-center gap-4">
