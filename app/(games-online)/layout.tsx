@@ -36,7 +36,7 @@ export default function GameLayout({
     <div className="min-h-dvh flex flex-col bg-background">
       {/* Header */}
       <header className="h-12 flex items-center justify-between px-3 border-b">
-        <Button variant="ghost" size="icon" onClick={() => router.replace("/")}>
+        <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="w-5 h-5" />
         </Button>
 

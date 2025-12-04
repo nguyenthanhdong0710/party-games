@@ -10,9 +10,18 @@ const games = [
   {
     label: "Truy tìm Imposter",
     description: "Tìm ra kẻ mạo danh trong nhóm của bạn",
-    link: "/imposters",
+    link: "/online/imposters",
     icon: UserSearch,
     color: "from-blue-500 to-red-500",
+    requiresDisplayName: true,
+  },
+  {
+    label: "Truy tìm Imposter (Offline)",
+    description: "Chơi offline trên cùng một thiết bị",
+    link: "/offline/imposters",
+    icon: UserSearch,
+    color: "from-purple-500 to-pink-500",
+    requiresDisplayName: false,
   },
 ];
 
@@ -21,13 +30,16 @@ export default function Home() {
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
   const [pendingLink, setPendingLink] = useState<string | null>(null);
 
-  const handleGameClick = (link: string) => {
+  const handleGameClick = (link: string, requiresDisplayName: boolean) => {
+    if (!requiresDisplayName) {
+      router.push(link);
+      return;
+    }
+
     const savedName = localStorage.getItem(DISPLAY_NAME_KEY);
     if (savedName) {
-      // Has display name, redirect directly
       router.push(link);
     } else {
-      // No display name, show dialog
       setPendingLink(link);
       setIsNameDialogOpen(true);
     }
@@ -70,7 +82,7 @@ export default function Home() {
             {games.map((game) => (
               <button
                 key={game.link}
-                onClick={() => handleGameClick(game.link)}
+                onClick={() => handleGameClick(game.link, game.requiresDisplayName)}
                 className="group relative overflow-hidden rounded-xl border bg-card px-3 py-2 transition-all hover:shadow-lg hover:scale-[1.02] text-left w-full"
               >
                 <div className="flex items-center gap-4">
