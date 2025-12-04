@@ -1,206 +1,156 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Plus, Users, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useRooms, useCreateRoom } from "@/hooks/useApi";
+import { DISPLAY_NAME_KEY, PLAYER_ID_KEY } from "@/lib/constants";
+import { nanoid } from "nanoid";
 import HowToPlayDialog from "@/components/HowToPlayDialog";
-import GameSettingsForm from "@/components/GameSettingsForm";
-import PlayerRevealDialog from "@/components/PlayerRevealDialog";
-import useGemini from "@/hooks/useGemini";
 
-export default function Home() {
+function getOrCreatePlayerId(): string {
+  if (typeof window === "undefined") return "";
+  let playerId = localStorage.getItem(PLAYER_ID_KEY);
+  if (!playerId) {
+    playerId = nanoid();
+    localStorage.setItem(PLAYER_ID_KEY, playerId);
+  }
+  return playerId;
+}
+
+export default function ImpostersLobby() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const [playerCount, setPlayerCount] = useState("4");
-  const [imposterCount, setImposterCount] = useState("1");
-  const [language, setLanguage] = useState("");
-  const [category, setCategory] = useState("");
+  const [playerId, setPlayerId] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [showHowToPlay, setShowHowToPlay] = useState(false);
-  const [showPlayerReveal, setShowPlayerReveal] = useState(false);
-  const [gameKey, setGameKey] = useState(0);
 
-  // Lưu trữ các từ đã fetch
-  const [words, setWords] = useState<string[]>([]);
-  const [currentWord, setCurrentWord] = useState<string | null>(null);
-  const [isWaitingForApi, setIsWaitingForApi] = useState(false);
+  const { data, isLoading, refetch } = useRooms("imposters");
+  const createRoom = useCreateRoom();
 
-  // Lưu trữ tất cả các từ đã sử dụng để tránh lặp lại
-  const [usedWords, setUsedWords] = useState<string[]>([]);
-
-  // Lưu trữ lang/cat đã dùng để fetch
-  const lastFetchedRef = useRef<{ lang: string; cat: string }>({
-    lang: "",
-    cat: "",
-  });
-  const isInitialFetchDone = useRef(false);
-
-  const { executePrompt, isLoading } = useGemini({
-    onSuccess: (response) => {
-      console.log("AI Response:", response);
-      // Parse 10 từ từ response
-      const newWords = response
-        .split("\n")
-        .map((w: string) => w.trim())
-        .filter((w: string) => w.length > 0)
-        .slice(0, 10);
-
-      if (newWords.length > 0) {
-        setWords((prev) => [...prev, ...newWords]);
-
-        // Nếu đang chờ API để bắt đầu game
-        if (isWaitingForApi && newWords.length > 0) {
-          setCurrentWord(newWords[0]);
-          setWords(newWords.slice(1));
-          setUsedWords((prev) => [...prev, newWords[0]]);
-          setShowPlayerReveal(true);
-          setIsWaitingForApi(false);
-        }
-      }
-    },
-    onError: (error) => {
-      console.error("AI Error:", error);
-      setIsWaitingForApi(false);
-    },
-  });
-
-  const fetchWords = useCallback(
-    (lang: string, cat: string, excludeWords: string[] = []) => {
-      const excludeList =
-        excludeWords.length > 0
-          ? `\n\nCác từ đã sử dụng (KHÔNG được lặp lại):\n${excludeWords.join(
-              ", "
-            )}`
-          : "";
-
-      // Tạo seed ngẫu nhiên để đa dạng hóa kết quả
-      const randomSeed = Math.floor(Math.random() * 1000);
-      const randomHint = [
-        "Hãy nghĩ đến những thứ ít ai nhớ đến đầu tiên",
-        "Ưu tiên những thứ độc đáo, thú vị",
-        "Tránh những từ quá phổ biến, hãy sáng tạo hơn",
-        "Hãy nghĩ đến những thứ bất ngờ trong chủ đề này",
-        "Chọn những thứ mà người ta thường quên mất",
-      ][randomSeed % 5];
-
-      const prompt = `Bạn là một trợ lý tạo từ vựng cho game Imposter (trò chơi tìm kẻ mạo danh đang nổi tiếng trên TikTok).
-
-Yêu cầu:
-- Ngôn ngữ: ${lang}
-- Chủ đề: ${cat}
-- Random seed: ${randomSeed}
-
-Hãy đưa ra 10 từ vựng NGẪU NHIÊN phù hợp với ngôn ngữ và chủ đề trên.
-
-Quy tắc:
-1. ${randomHint}
-2. KHÔNG chọn những từ quá hiển nhiên hoặc được nhắc đến đầu tiên khi nghĩ về chủ đề
-3. Từ phải phổ biến đủ để người chơi có thể mô tả được, nhưng không phải là từ đầu tiên ai cũng nghĩ đến
-4. Từ không được quá đơn giản (như "cây", "nhà") hoặc quá khó
-5. Từ phải cụ thể, rõ ràng (ví dụ: "xe đạp" thay vì "phương tiện")
-6. Mỗi từ trên một dòng riêng
-7. Không thêm số thứ tự, dấu ngoặc kép, dấu chấm hay ký tự đặc biệt
-8. 10 từ phải khác nhau và đa dạng${excludeList}
-
-Từ vựng:`;
-
-      lastFetchedRef.current = { lang, cat };
-      executePrompt(prompt);
-    },
-    [executePrompt]
-  );
-
-  // Fetch ngay khi vào trang
   useEffect(() => {
-    if (!isInitialFetchDone.current) {
-      isInitialFetchDone.current = true;
+    setPlayerId(getOrCreatePlayerId());
+    setDisplayName(localStorage.getItem(DISPLAY_NAME_KEY) || "");
+  }, []);
 
-      // Đọc lang và cat từ URL search params
-      const langParam = searchParams.get("lang");
-      const catParam = searchParams.get("cat");
+  const handleCreateRoom = async () => {
+    if (!playerId || !displayName) return;
 
-      if (langParam) setLanguage(langParam);
-      if (catParam) setCategory(catParam);
-
-      fetchWords(langParam || "tiếng Việt", catParam || "bất kỳ", []);
-    }
-  }, [fetchWords, searchParams]);
-
-  const handleStart = () => {
-    const lang = language.trim() || "tiếng Việt";
-    const cat = category.trim() || "bất kỳ";
-
-    // Cập nhật URL search params
-    const params = new URLSearchParams();
-    if (language.trim()) params.set("lang", language.trim());
-    if (category.trim()) params.set("cat", category.trim());
-    const queryString = params.toString();
-    router.push(queryString ? `?${queryString}` : "/imposters", {
-      scroll: false,
-    });
-
-    const hasChanged =
-      lang !== lastFetchedRef.current.lang ||
-      cat !== lastFetchedRef.current.cat;
-
-    if (hasChanged) {
-      // Lang/cat đã thay đổi -> xóa words cũ, reset usedWords và fetch mới
-      setWords([]);
-      setUsedWords([]);
-      setCurrentWord(null);
-      setIsWaitingForApi(true);
-      setGameKey((prev) => prev + 1);
-      fetchWords(lang, cat, []);
-    } else if (words.length > 0) {
-      // Không thay đổi và có từ sẵn -> dùng từ đầu tiên
-      const [nextWord, ...remainingWords] = words;
-      setCurrentWord(nextWord);
-      setWords(remainingWords);
-      setUsedWords((prev) => [...prev, nextWord]);
-      setGameKey((prev) => prev + 1);
-      setShowPlayerReveal(true);
-
-      // Nếu còn ít từ thì fetch thêm
-      if (remainingWords.length < 5) {
-        fetchWords(lang, cat, [...usedWords, nextWord, ...remainingWords]);
-      }
-    } else {
-      // Không thay đổi nhưng không có từ -> fetch và chờ để start game
-      setIsWaitingForApi(true);
-      setGameKey((prev) => prev + 1);
-      fetchWords(lang, cat, usedWords);
+    try {
+      const result = await createRoom.mutateAsync({
+        gameType: "imposters",
+        hostId: playerId,
+        hostName: displayName,
+      });
+      router.push(`/imposters/${result.room.roomId}`);
+    } catch (error) {
+      console.error("Failed to create room:", error);
     }
   };
 
-  const handleHowToPlay = () => {
-    setShowHowToPlay(true);
+  const handleJoinRoom = (roomId: string) => {
+    router.push(`/imposters/${roomId}`);
   };
+
+  const rooms = data?.rooms || [];
 
   return (
     <>
       <HowToPlayDialog open={showHowToPlay} onOpenChange={setShowHowToPlay} />
-      <PlayerRevealDialog
-        open={showPlayerReveal}
-        onOpenChange={setShowPlayerReveal}
-        playerCount={parseInt(playerCount)}
-        imposterCount={parseInt(imposterCount)}
-        word={currentWord || ""}
-        gameKey={gameKey}
-      />
 
-      {/* Main Content */}
-      <GameSettingsForm
-        playerCount={playerCount}
-        setPlayerCount={setPlayerCount}
-        imposterCount={imposterCount}
-        setImposterCount={setImposterCount}
-        language={language}
-        setLanguage={setLanguage}
-        category={category}
-        setCategory={setCategory}
-        onStart={handleStart}
-        onHowToPlay={handleHowToPlay}
-        isLoading={isLoading}
-      />
+      <div className="w-full max-w-md space-y-6 p-5">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <h2 className="text-3xl font-bold">Truy tìm KMD</h2>
+          <p className="text-muted-foreground text-sm">
+            Chọn phòng để tham gia hoặc tạo phòng mới
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3">
+          <Button
+            onClick={handleCreateRoom}
+            className="flex-1 h-12"
+            disabled={createRoom.isPending}
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            {createRoom.isPending ? "Đang tạo..." : "Tạo phòng"}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-12 w-12"
+            onClick={() => refetch()}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
+
+        {/* Room List */}
+        <div className="space-y-3">
+          <h3 className="font-semibold text-sm text-muted-foreground">
+            Phòng đang chờ ({rooms.filter((r) => r.status === "waiting").length})
+          </h3>
+
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Đang tải...
+            </div>
+          ) : rooms.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground border rounded-xl">
+              Chưa có phòng nào. Hãy tạo phòng mới!
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {rooms.map((room) => (
+                <button
+                  key={room.roomId}
+                  onClick={() => handleJoinRoom(room.roomId)}
+                  disabled={room.status === "playing"}
+                  className="w-full p-4 rounded-xl border bg-card hover:bg-accent transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold">
+                        Phòng của {room.hostName}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Mã phòng: {room.roomId}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 text-sm">
+                        <Users className="w-4 h-4" />
+                        {room.players?.length || 1}
+                      </div>
+                      <div
+                        className={`px-2 py-1 rounded text-xs ${
+                          room.status === "waiting"
+                            ? "bg-green-500/20 text-green-500"
+                            : "bg-yellow-500/20 text-yellow-500"
+                        }`}
+                      >
+                        {room.status === "waiting" ? "Chờ" : "Đang chơi"}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* How to Play */}
+        <Button
+          onClick={() => setShowHowToPlay(true)}
+          variant="outline"
+          className="w-full h-10"
+        >
+          Cách chơi
+        </Button>
+      </div>
     </>
   );
 }

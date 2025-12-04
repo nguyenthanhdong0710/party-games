@@ -1,5 +1,6 @@
 // LocalStorage Keys
 export const DISPLAY_NAME_KEY = "party_games_display_name";
+export const PLAYER_ID_KEY = "party_games_player_id";
 
 // Default Values
 export const DEFAULT_DISPLAY_NAME = "Người chơi";
