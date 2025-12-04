@@ -46,7 +46,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-3 pt-3 pb-10">
+      <main className="flex-1 flex flex-col items-center justify-center">
         {children}
       </main>
     </div>

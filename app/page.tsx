@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserSearch, ChevronRight } from "lucide-react";
+import { UserSearch, ChevronRight, Flame } from "lucide-react";
 import DisplayNameDialog from "@/components/DisplayNameDialog";
 import { DISPLAY_NAME_KEY } from "@/lib/constants";
 import PATH from "@/lib/router-path";
@@ -22,6 +22,14 @@ const games = [
     link: PATH.offlineImposters,
     icon: UserSearch,
     color: "from-purple-500 to-pink-500",
+    requiresDisplayName: false,
+  },
+  {
+    label: "Rút Diêm",
+    description: "Ai rút phải que diêm cháy sẽ thua",
+    link: PATH.offlineBadMatch,
+    icon: Flame,
+    color: "from-orange-500 to-red-600",
     requiresDisplayName: false,
   },
 ];

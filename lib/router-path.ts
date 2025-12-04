@@ -5,6 +5,7 @@ class RouterPath {
   // Offline
   offline = "/offline";
   offlineImposters = "/offline/imposters";
+  offlineBadMatch = "/offline/bad-match";
 
   // Online
   online = "/online";
