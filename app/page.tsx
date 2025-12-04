@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserSearch, ChevronRight } from "lucide-react";
 import DisplayNameDialog from "@/components/DisplayNameDialog";
@@ -8,7 +8,7 @@ import { DISPLAY_NAME_KEY } from "@/lib/constants";
 
 const games = [
   {
-    label: "Truy tìm KMD",
+    label: "Truy tìm Imposter",
     description: "Tìm ra kẻ mạo danh trong nhóm của bạn",
     link: "/imposters",
     icon: UserSearch,
@@ -18,15 +18,8 @@ const games = [
 
 export default function Home() {
   const router = useRouter();
-  const [hasDisplayName, setHasDisplayName] = useState<boolean | null>(null);
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
   const [pendingLink, setPendingLink] = useState<string | null>(null);
-
-  // Check if display name exists on mount
-  useEffect(() => {
-    const savedName = localStorage.getItem(DISPLAY_NAME_KEY);
-    setHasDisplayName(!!savedName);
-  }, []);
 
   const handleGameClick = (link: string) => {
     const savedName = localStorage.getItem(DISPLAY_NAME_KEY);
@@ -41,7 +34,6 @@ export default function Home() {
   };
 
   const handleNameSaved = () => {
-    setHasDisplayName(true);
     if (pendingLink) {
       router.push(pendingLink);
       setPendingLink(null);

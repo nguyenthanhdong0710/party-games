@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Minus, Plus } from "lucide-react";
 
-interface GameSettingsFormProps {
+interface Props {
   playerCount: string;
   setPlayerCount: (value: string) => void;
   imposterCount: string;
@@ -19,7 +19,7 @@ interface GameSettingsFormProps {
   isLoading?: boolean;
 }
 
-export default function GameSettingsForm({
+export default function GameSettingsFormOffline({
   playerCount,
   setPlayerCount,
   imposterCount,
@@ -31,12 +31,12 @@ export default function GameSettingsForm({
   onStart,
   onHowToPlay,
   isLoading,
-}: GameSettingsFormProps) {
+}: Props) {
   return (
     <div className="w-full max-w-sm space-y-8 p-5 rounded-xl border bg-card">
       {/* Title */}
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold">Truy tìm KMD</h2>
+        <h2 className="text-3xl font-bold">Truy tìm Imposter</h2>
         <p className="text-muted-foreground text-sm">
           Tìm ra kẻ mạo danh trong nhóm của bạn
         </p>
