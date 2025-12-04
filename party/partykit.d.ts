@@ -28,3 +28,10 @@ declare function fetch(
   input: RequestInfo | URL,
   init?: RequestInit
 ): Promise<Response>;
+
+// Console for Cloudflare Workers runtime
+declare const console: {
+  log(...args: unknown[]): void;
+  error(...args: unknown[]): void;
+  warn(...args: unknown[]): void;
+};

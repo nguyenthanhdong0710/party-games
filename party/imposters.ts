@@ -144,12 +144,10 @@ export default class ImpostersRoom implements Party.Server {
       });
 
       if (!response.ok) {
-        // eslint-disable-next-line no-console
-        // console.error("Sync failed:", response.status, await response.text());
+        console.error("Sync failed:", response.status, await response.text());
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
-      // console.error("Sync error:", error);
+      console.error("Sync error:", error);
     }
   }
 
