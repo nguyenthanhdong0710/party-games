@@ -1,0 +1,9 @@
+{
+  "$schema": "https://www.partykit.io/schema.json",
+  "name": "party-games",
+  "main": "party/imposters.ts",
+  "parties": {
+    "imposters": "party/imposters.ts"
+  },
+  "compatibilityDate": "2024-01-01"
+}

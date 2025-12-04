@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContentFullscreen,
@@ -11,85 +11,33 @@ import {
 interface PlayerRevealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  playerCount: number;
-  imposterCount: number;
+  displayName: string;
+  isImposter: boolean;
   word: string;
-  gameKey?: number; // Dùng để reset game state
-}
-
-// Hàm tạo số ngẫu nhiên sử dụng Crypto API (ngẫu nhiên hơn Math.random)
-function getSecureRandomNumber(max: number): number {
-  if (typeof window !== "undefined" && window.crypto) {
-    const array = new Uint32Array(1);
-    window.crypto.getRandomValues(array);
-    return array[0] % max;
-  }
-  // Fallback cho SSR hoặc môi trường không hỗ trợ
-  return Math.floor(Math.random() * max);
-}
-
-// Fisher-Yates Shuffle với Crypto API - thuật toán shuffle chuẩn nhất
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = getSecureRandomNumber(i + 1);
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-// Hàm tạo vị trí imposter ngẫu nhiên sử dụng Fisher-Yates Shuffle
-function generateImposterIndices(
-  playerCount: number,
-  imposterCount: number
-): number[] {
-  // Tạo mảng các vị trí từ 1 đến playerCount
-  const allPositions = Array.from({ length: playerCount }, (_, i) => i + 1);
-
-  // Shuffle mảng và lấy imposterCount phần tử đầu tiên
-  const shuffled = shuffleArray(allPositions);
-  return shuffled.slice(0, imposterCount);
 }
 
 export default function PlayerRevealDialog({
   open,
   onOpenChange,
-  playerCount,
-  imposterCount,
+  displayName,
+  isImposter,
   word,
-  gameKey = 0,
 }: PlayerRevealDialogProps) {
-  const [currentPlayer, setCurrentPlayer] = useState(1);
   const [isRevealed, setIsRevealed] = useState(false);
 
-  // Tạo imposter indices khi gameKey thay đổi (mỗi lần bắt đầu game mới)
-  const imposterIndices = useMemo(
-    () => generateImposterIndices(playerCount, imposterCount),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [gameKey, playerCount, imposterCount]
-  );
-
-  const isCurrentPlayerImposter = imposterIndices.includes(currentPlayer);
-
   const handleCardTap = () => {
-    setIsRevealed(true);
+    if (!isRevealed) {
+      setIsRevealed(true);
+    }
   };
 
   const handleGotIt = () => {
-    if (currentPlayer < playerCount) {
-      setCurrentPlayer(currentPlayer + 1);
-      setIsRevealed(false);
-    } else {
-      // Kết thúc game
-      onOpenChange(false);
-      setCurrentPlayer(1);
-      setIsRevealed(false);
-    }
+    // Flip back to "tap to reveal" state instead of closing
+    setIsRevealed(false);
   };
 
   const handleClose = () => {
     onOpenChange(false);
-    setCurrentPlayer(1);
     setIsRevealed(false);
   };
 
@@ -102,12 +50,12 @@ export default function PlayerRevealDialog({
         onClick={!isRevealed ? handleCardTap : handleGotIt}
       >
         <div className="sr-only">
-          <DialogTitle>Người chơi {currentPlayer}</DialogTitle>
+          <DialogTitle>{displayName}</DialogTitle>
           <DialogDescription>Xem vai trò của bạn</DialogDescription>
         </div>
 
         <div className="flex flex-col items-center justify-center w-full h-full p-8">
-          {/* Card container - fixed height để tránh xô lệch */}
+          {/* Card container */}
           <div className="h-96 flex items-center justify-center">
             {!isRevealed ? (
               <div
@@ -118,8 +66,8 @@ export default function PlayerRevealDialog({
                 }}
               >
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <h2 className="text-4xl font-bold mb-8">
-                    Người chơi {currentPlayer}
+                  <h2 className="text-3xl font-bold mb-8 text-center px-4">
+                    {displayName}
                   </h2>
 
                   <div className="w-48 h-48 mb-8 flex items-center justify-center">
@@ -133,12 +81,12 @@ export default function PlayerRevealDialog({
               <div
                 className="w-80 h-96 rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center justify-center"
                 style={{
-                  background: isCurrentPlayerImposter
+                  background: isImposter
                     ? "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)"
                     : "linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)",
                 }}
               >
-                {isCurrentPlayerImposter ? (
+                {isImposter ? (
                   <>
                     <h2 className="text-5xl font-bold mb-8 text-red-400">
                       Kẻ mạo danh
@@ -163,7 +111,7 @@ export default function PlayerRevealDialog({
             )}
           </div>
 
-          {/* Bottom section - fixed height để tránh xô lệch */}
+          {/* Bottom section */}
           <div className="h-40 flex flex-col items-center justify-center mt-8">
             {!isRevealed ? (
               <>
@@ -180,7 +128,7 @@ export default function PlayerRevealDialog({
                   Đã hiểu!
                 </div>
                 <p className="mt-4 text-sm opacity-75">
-                  Chạm vào màn hình để tiếp tục
+                  Chạm để ẩn thẻ • Ấn X để đóng
                 </p>
               </>
             )}
