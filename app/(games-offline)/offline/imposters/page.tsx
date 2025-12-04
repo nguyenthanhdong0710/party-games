@@ -22,12 +22,14 @@ export default function Home() {
 
   const isInitialFetchDone = useRef(false);
 
-  const { isLoading, isWaitingForApi, getNextWord, prefetch } = useWordGenerator({
-    onWordReady: (word) => {
-      setCurrentWord(word);
-      setShowPlayerReveal(true);
-    },
-  });
+  const { isWaitingForApi, hasWords, getNextWord, prefetch } = useWordGenerator(
+    {
+      onWordReady: (word) => {
+        setCurrentWord(word);
+        setShowPlayerReveal(true);
+      },
+    }
+  );
 
   // Fetch ngay khi vào trang
   useEffect(() => {
@@ -53,7 +55,7 @@ export default function Home() {
     if (language.trim()) params.set("lang", language.trim());
     if (category.trim()) params.set("cat", category.trim());
     const queryString = params.toString();
-    router.push(queryString ? `?${queryString}` : "/imposters/offline", {
+    router.push(queryString ? `?${queryString}` : "/offline/imposters", {
       scroll: false,
     });
 
@@ -93,7 +95,7 @@ export default function Home() {
         setCategory={setCategory}
         onStart={handleStart}
         onHowToPlay={handleHowToPlay}
-        isLoading={isLoading || isWaitingForApi}
+        isLoading={!hasWords || isWaitingForApi}
       />
     </>
   );

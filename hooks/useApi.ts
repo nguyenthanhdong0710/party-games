@@ -102,7 +102,7 @@ export const useLogin = () => {
 };
 
 // Gemini Hook
-export const useGeminiApi = () => {
+export const useGemini = () => {
   return useMutation({
     mutationFn: api.geminiApi,
   });

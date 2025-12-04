@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import useGemini from "./useGemini";
+import { useGemini } from "./useApi";
 
 interface UseWordGeneratorOptions {
   onWordReady?: (word: string) => void;
@@ -13,58 +13,41 @@ export function useWordGenerator(options: UseWordGeneratorOptions = {}) {
   const [usedWords, setUsedWords] = useState<string[]>([]);
   const [isWaitingForApi, setIsWaitingForApi] = useState(false);
 
-  const lastFetchedRef = useRef<{ lang: string; cat: string }>({
-    lang: "",
-    cat: "",
-  });
-
+  const lastFetchedRef = useRef({ lang: "", cat: "" });
+  const isWaitingForApiRef = useRef(false);
   const onWordReadyRef = useRef(options.onWordReady);
+  const onErrorRef = useRef(options.onError);
   onWordReadyRef.current = options.onWordReady;
+  onErrorRef.current = options.onError;
 
-  const { executePrompt, isLoading } = useGemini({
-    onSuccess: (response) => {
-      const newWords = response
-        .split("\n")
-        .map((w: string) => w.trim())
-        .filter((w: string) => w.length > 0)
-        .slice(0, 10);
+  const { mutateAsync, isPending } = useGemini();
 
-      if (newWords.length > 0) {
-        setWords((prev) => [...prev, ...newWords]);
+  const parseWords = (response: string): string[] => {
+    return response
+      .split("\n")
+      .map((w) => w.trim())
+      .filter((w) => w.length > 0)
+      .slice(0, 10);
+  };
 
-        if (isWaitingForApi && newWords.length > 0) {
-          const word = newWords[0];
-          setWords(newWords.slice(1));
-          setUsedWords((prev) => [...prev, word]);
-          setIsWaitingForApi(false);
-          onWordReadyRef.current?.(word);
-        }
-      }
-    },
-    onError: (error) => {
-      console.error("AI Error:", error);
-      setIsWaitingForApi(false);
-      options.onError?.(error.message || "Unknown error");
-    },
-  });
+  const buildPrompt = (lang: string, cat: string, excludeWords: string[]) => {
+    const excludeList =
+      excludeWords.length > 0
+        ? `\n\nCác từ đã sử dụng (KHÔNG được lặp lại):\n${excludeWords.join(
+            ", "
+          )}`
+        : "";
 
-  const fetchWords = useCallback(
-    (lang: string, cat: string, excludeWords: string[] = []) => {
-      const excludeList =
-        excludeWords.length > 0
-          ? `\n\nCác từ đã sử dụng (KHÔNG được lặp lại):\n${excludeWords.join(", ")}`
-          : "";
+    const randomSeed = Math.floor(Math.random() * 1000);
+    const hints = [
+      "Hãy nghĩ đến những thứ ít ai nhớ đến đầu tiên",
+      "Ưu tiên những thứ độc đáo, thú vị",
+      "Tránh những từ quá phổ biến, hãy sáng tạo hơn",
+      "Hãy nghĩ đến những thứ bất ngờ trong chủ đề này",
+      "Chọn những thứ mà người ta thường quên mất",
+    ];
 
-      const randomSeed = Math.floor(Math.random() * 1000);
-      const randomHint = [
-        "Hãy nghĩ đến những thứ ít ai nhớ đến đầu tiên",
-        "Ưu tiên những thứ độc đáo, thú vị",
-        "Tránh những từ quá phổ biến, hãy sáng tạo hơn",
-        "Hãy nghĩ đến những thứ bất ngờ trong chủ đề này",
-        "Chọn những thứ mà người ta thường quên mất",
-      ][randomSeed % 5];
-
-      const prompt = `Bạn là một trợ lý tạo từ vựng cho game Imposter (trò chơi tìm kẻ mạo danh đang nổi tiếng trên TikTok).
+    return `Bạn là một trợ lý tạo từ vựng cho game Imposter (trò chơi tìm kẻ mạo danh đang nổi tiếng trên TikTok).
 
 Yêu cầu:
 - Ngôn ngữ: ${lang}
@@ -74,7 +57,7 @@ Yêu cầu:
 Hãy đưa ra 10 từ vựng NGẪU NHIÊN phù hợp với ngôn ngữ và chủ đề trên.
 
 Quy tắc:
-1. ${randomHint}
+1. ${hints[randomSeed % 5]}
 2. KHÔNG chọn những từ quá hiển nhiên hoặc được nhắc đến đầu tiên khi nghĩ về chủ đề
 3. Từ phải phổ biến đủ để người chơi có thể mô tả được, nhưng không phải là từ đầu tiên ai cũng nghĩ đến
 4. Từ không được quá đơn giản (như "cây", "nhà") hoặc quá khó
@@ -84,11 +67,40 @@ Quy tắc:
 8. 10 từ phải khác nhau và đa dạng${excludeList}
 
 Từ vựng:`;
+  };
 
+  const fetchWords = useCallback(
+    async (lang: string, cat: string, excludeWords: string[] = []) => {
       lastFetchedRef.current = { lang, cat };
-      executePrompt(prompt);
+
+      try {
+        const response = await mutateAsync(
+          buildPrompt(lang, cat, excludeWords)
+        );
+        console.log("new-words", response);
+
+        const newWords = parseWords(response);
+
+        if (newWords.length > 0) {
+          if (isWaitingForApiRef.current) {
+            const word = newWords[0];
+            setWords(newWords.slice(1));
+            setUsedWords((prev) => [...prev, word]);
+            isWaitingForApiRef.current = false;
+            setIsWaitingForApi(false);
+            onWordReadyRef.current?.(word);
+          } else {
+            setWords((prev) => [...prev, ...newWords]);
+          }
+        }
+      } catch (error) {
+        console.error("AI Error:", error);
+        isWaitingForApiRef.current = false;
+        setIsWaitingForApi(false);
+        onErrorRef.current?.((error as Error).message || "Unknown error");
+      }
     },
-    [executePrompt]
+    [mutateAsync]
   );
 
   const getNextWord = useCallback(
@@ -98,21 +110,19 @@ Từ vựng:`;
         cat !== lastFetchedRef.current.cat;
 
       if (hasChanged) {
-        // Settings changed - reset and fetch new words
         setWords([]);
         setUsedWords([]);
+        isWaitingForApiRef.current = true;
         setIsWaitingForApi(true);
         fetchWords(lang, cat, []);
         return null;
       }
 
       if (words.length > 0) {
-        // Use available word
         const [nextWord, ...remainingWords] = words;
         setWords(remainingWords);
         setUsedWords((prev) => [...prev, nextWord]);
 
-        // Prefetch if running low
         if (remainingWords.length < 5) {
           fetchWords(lang, cat, [...usedWords, nextWord, ...remainingWords]);
         }
@@ -120,7 +130,7 @@ Từ vựng:`;
         return nextWord;
       }
 
-      // No words available - fetch and wait
+      isWaitingForApiRef.current = true;
       setIsWaitingForApi(true);
       fetchWords(lang, cat, usedWords);
       return null;
@@ -130,10 +140,7 @@ Từ vựng:`;
 
   const prefetch = useCallback(
     (lang: string, cat: string) => {
-      if (
-        lastFetchedRef.current.lang === "" &&
-        lastFetchedRef.current.cat === ""
-      ) {
+      if (!lastFetchedRef.current.lang && !lastFetchedRef.current.cat) {
         fetchWords(lang, cat, []);
       }
     },
@@ -143,6 +150,7 @@ Từ vựng:`;
   const reset = useCallback(() => {
     setWords([]);
     setUsedWords([]);
+    isWaitingForApiRef.current = false;
     setIsWaitingForApi(false);
     lastFetchedRef.current = { lang: "", cat: "" };
   }, []);
@@ -150,8 +158,9 @@ Từ vựng:`;
   return {
     words,
     usedWords,
-    isLoading,
+    isLoading: isPending,
     isWaitingForApi,
+    hasWords: words.length > 0,
     getNextWord,
     prefetch,
     reset,
