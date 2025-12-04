@@ -12,11 +12,8 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  DISPLAY_NAME_KEY,
-  DEFAULT_DISPLAY_NAME,
-  DISPLAY_NAME_MAX_LENGTH,
-} from "@/lib/constants";
+import { DEFAULT_DISPLAY_NAME, DISPLAY_NAME_MAX_LENGTH } from "@/lib/constants";
+import { usePlayer } from "@/providers/player-provider";
 
 interface DisplayNameDialogProps {
   open: boolean;
@@ -33,20 +30,20 @@ export default function DisplayNameDialog({
   initialValue,
   allowClose = true,
 }: DisplayNameDialogProps) {
+  const { displayName, setDisplayName } = usePlayer();
   const [tempName, setTempName] = useState("");
 
   // Set initial value when dialog opens
   useEffect(() => {
     if (open) {
-      const savedName = localStorage.getItem(DISPLAY_NAME_KEY);
-      setTempName(initialValue || savedName || "");
+      setTempName(initialValue || displayName || "");
     }
-  }, [open, initialValue]);
+  }, [open, initialValue, displayName]);
 
   const handleSave = () => {
     const trimmedName = tempName.trim();
     if (trimmedName) {
-      localStorage.setItem(DISPLAY_NAME_KEY, trimmedName);
+      setDisplayName(trimmedName);
       onSave?.(trimmedName);
       onOpenChange(false);
     }

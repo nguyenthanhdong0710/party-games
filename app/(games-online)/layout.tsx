@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import DisplayNameDialog from "@/components/DisplayNameDialog";
 import { ArrowLeft, Pencil } from "lucide-react";
-import { PlayerProvider, usePlayer } from "@/providers/player-provider";
+import { usePlayer } from "@/providers/player-provider";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -58,9 +58,5 @@ export default function GameLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <PlayerProvider>
-      <LayoutContent>{children}</LayoutContent>
-    </PlayerProvider>
-  );
+  return <LayoutContent>{children}</LayoutContent>;
 }

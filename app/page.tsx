@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserSearch, ChevronRight, Flame } from "lucide-react";
 import DisplayNameDialog from "@/components/DisplayNameDialog";
-import { DISPLAY_NAME_KEY } from "@/lib/constants";
 import PATH from "@/lib/router-path";
+import { usePlayer } from "@/providers/player-provider";
 
 const games = [
   {
@@ -36,6 +36,7 @@ const games = [
 
 export default function Home() {
   const router = useRouter();
+  const { displayName } = usePlayer();
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
   const [pendingLink, setPendingLink] = useState<string | null>(null);
 
@@ -45,8 +46,7 @@ export default function Home() {
       return;
     }
 
-    const savedName = localStorage.getItem(DISPLAY_NAME_KEY);
-    if (savedName) {
+    if (displayName && displayName !== "Người chơi") {
       router.push(link);
     } else {
       setPendingLink(link);
