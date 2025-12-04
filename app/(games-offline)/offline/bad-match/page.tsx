@@ -20,6 +20,7 @@ export default function BadMatchPage() {
     "setup"
   );
   const [matches, setMatches] = useState<Match[]>([]);
+  const [isPulling, setIsPulling] = useState(false);
 
   const startGame = () => {
     const count = Math.max(2, Math.min(20, matchCount));
@@ -34,14 +35,18 @@ export default function BadMatchPage() {
         isBurned: i === burnedIdx,
       }))
     );
+    setIsPulling(false);
     setGameState("playing");
   };
 
   const pullMatch = useCallback(
     (index: number) => {
-      if (gameState !== "playing") return;
+      if (gameState !== "playing" || isPulling) return;
       const match = matches[index];
       if (!match || match.state !== "normal") return;
+
+      // Block further pulls during animation
+      setIsPulling(true);
 
       // Start pulling animation
       setMatches((prev) =>
@@ -59,9 +64,10 @@ export default function BadMatchPage() {
         if (isBurned) {
           setGameState("ended");
         }
+        setIsPulling(false);
       }, 500);
     },
-    [matches, gameState]
+    [matches, gameState, isPulling]
   );
 
   const replay = () => startGame();
@@ -143,7 +149,11 @@ export default function BadMatchPage() {
               tabIndex={0}
               onPointerDown={(e) => {
                 e.preventDefault();
-                if (gameState === "playing" && match.state === "normal") {
+                if (
+                  gameState === "playing" &&
+                  match.state === "normal" &&
+                  !isPulling
+                ) {
                   pullMatch(index);
                 }
               }}
@@ -151,7 +161,9 @@ export default function BadMatchPage() {
                 relative flex items-center select-none touch-none
                 transition-transform duration-500 ease-out
                 ${
-                  gameState === "playing" && match.state === "normal"
+                  gameState === "playing" &&
+                  match.state === "normal" &&
+                  !isPulling
                     ? "cursor-pointer active:translate-x-2"
                     : "cursor-default"
                 }
