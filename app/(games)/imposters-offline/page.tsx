@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import HowToPlayDialog from "@/components/imposters/HowToPlayDialog";
 import GameSettingsForm from "@/components/imposters/GameSettingsForm";
-import PlayerRevealDialog from "@/components/imposters/PlayerRevealDialog";
+import PlayerRevealDialog from "@/components/imposters/PlayerRevealDialogOffline";
 import useGemini from "@/hooks/useGemini";
 
 export default function Home() {
